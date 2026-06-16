@@ -1,0 +1,2 @@
+git status --porcelain=v1 -uall before M4 manager setup:
+

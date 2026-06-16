@@ -15,7 +15,7 @@ from apps.shared.ai.idempotency import (
     build_run_item_idempotency_key,
     digest_payload,
 )
-from apps.shared.ai.provider import AIResponse
+from apps.shared.ai.provider import AIRequest, AIResponse
 from apps.visibility_service.app.db import models
 
 PENDING = "pending"
@@ -226,6 +226,21 @@ class VisibilityRepository:
                 raise
             return existing
         return raw_response
+
+    def build_ai_request(self, item: models.RunItem) -> AIRequest:
+        metadata = self._item_metadata(item)
+        return AIRequest(
+            provider_key=metadata["provider_key"],
+            model_id=metadata["model_id"],
+            prompt_text=metadata["prompt_text"],
+            metadata={
+                "run_batch_id": str(item.run_batch_id),
+                "run_item_id": str(item.id),
+                "sample_index": item.sample_index,
+                "idempotency_key": item.idempotency_key,
+                "attempt_count": item.attempt_count,
+            },
+        )
 
     def list_raw_responses(self, *, q: str | None, limit: int, offset: int) -> RawResponsePage:
         search_condition = None

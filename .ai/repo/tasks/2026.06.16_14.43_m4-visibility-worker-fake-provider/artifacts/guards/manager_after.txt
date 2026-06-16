@@ -1,0 +1,23 @@
+git status --porcelain=v1 -uall after M4 implementation and closure sync:
+
+ M README.md
+ M apps/visibility_service/app/db/repository.py
+ M apps/worker/app/main.py
+ M scripts/check_skeleton.py
+?? .ai/repo/tasks/2026.06.16_14.43_m4-visibility-worker-fake-provider/artifacts/contracts/implementation_contract.v1.md
+?? .ai/repo/tasks/2026.06.16_14.43_m4-visibility-worker-fake-provider/artifacts/guards/manager_before.txt
+?? .ai/repo/tasks/2026.06.16_14.43_m4-visibility-worker-fake-provider/outputs/architect.md
+?? .ai/repo/tasks/2026.06.16_14.43_m4-visibility-worker-fake-provider/outputs/code_simplifier.md
+?? .ai/repo/tasks/2026.06.16_14.43_m4-visibility-worker-fake-provider/outputs/developer.md
+?? .ai/repo/tasks/2026.06.16_14.43_m4-visibility-worker-fake-provider/outputs/qa.md
+?? .ai/repo/tasks/2026.06.16_14.43_m4-visibility-worker-fake-provider/outputs/reviewer.md
+?? .ai/repo/tasks/2026.06.16_14.43_m4-visibility-worker-fake-provider/outputs/security.md
+?? .ai/repo/tasks/2026.06.16_14.43_m4-visibility-worker-fake-provider/outputs/technical_writer.md
+?? .ai/repo/tasks/2026.06.16_14.43_m4-visibility-worker-fake-provider/progress.md
+?? apps/worker/app/visibility_worker.py
+?? openspec/changes/m4-visibility-worker-fake-provider/design.md
+?? openspec/changes/m4-visibility-worker-fake-provider/proposal.md
+?? openspec/changes/m4-visibility-worker-fake-provider/specs/m4-visibility-worker-fake-provider/spec.md
+?? openspec/changes/m4-visibility-worker-fake-provider/tasks.md
+?? tests/integration/test_visibility_worker_postgres.py
+?? tests/services/test_visibility_worker.py

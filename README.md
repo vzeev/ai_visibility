@@ -108,6 +108,27 @@ Visibility-service now owns the first real queue and raw-evidence path:
 Raw response completion is idempotent per run item: replaying the same
 completion returns the existing raw evidence row instead of creating a duplicate.
 
+## M4 Visibility Worker Fake Provider
+
+The worker now executes the first bounded queue-processing path:
+
+- `VisibilityRepository.build_ai_request` constructs provider-neutral requests
+  from the run item's immutable config snapshot.
+- `VisibilityWorker.process_one` claims one item, calls an `AIProviderAdapter`,
+  and stores raw evidence through the existing M3 repository path.
+- `VisibilityWorker.process_batch(max_items=...)` processes a bounded number of
+  items and stops early when the queue is empty.
+- The default execution path uses `FakeAIProviderAdapter`; real provider network
+  calls remain out of scope for automated tests.
+- Retryable adapter failures are recorded as model errors and reuse the M3 queue
+  retry/failure state transitions.
+
+Run the worker locally with:
+
+```bash
+poetry run python -m apps.worker.app.main
+```
+
 ## Design Decisions
 
 Start with [docs/decisions/architecture.md](docs/decisions/architecture.md).

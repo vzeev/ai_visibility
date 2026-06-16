@@ -32,15 +32,19 @@ REQUIRED_PATHS = [
     "apps/shared/ai/idempotency.py",
     "apps/shared/ai/rate_limits.py",
     "apps/shared/ai/secrets.py",
+    "apps/worker/app/visibility_worker.py",
     "apps/web/package.json",
     "apps/web/src/app/App.tsx",
     "scripts/run_web_check.py",
     "tests/services/test_config_service_api.py",
     "tests/services/test_visibility_service_api.py",
+    "tests/services/test_visibility_worker.py",
     "tests/integration/test_config_service_postgres.py",
     "tests/integration/test_visibility_service_postgres.py",
+    "tests/integration/test_visibility_worker_postgres.py",
     "openspec/changes/m2-db-backed-config-service/specs/m2-db-backed-config-service/spec.md",
     "openspec/changes/m3-visibility-queue-raw-persistence/specs/m3-visibility-queue-raw-persistence/spec.md",
+    "openspec/changes/m4-visibility-worker-fake-provider/specs/m4-visibility-worker-fake-provider/spec.md",
 ]
 
 REQUIRED_MARKERS = {
@@ -93,6 +97,7 @@ REQUIRED_MARKERS = {
         "claim_next_item",
         "record_model_error",
         "record_raw_response",
+        "build_ai_request",
         "build_raw_response_idempotency_key",
     ],
     "apps/shared/ai/provider.py": [
@@ -102,6 +107,14 @@ REQUIRED_MARKERS = {
     "apps/shared/ai/idempotency.py": [
         "build_run_item_idempotency_key",
         "build_raw_response_idempotency_key",
+    ],
+    "apps/worker/app/visibility_worker.py": [
+        "class VisibilityWorker",
+        "process_one",
+        "process_batch",
+        "FakeAIProviderAdapter",
+        "record_raw_response",
+        "record_model_error",
     ],
     "apps/web/src/app/App.tsx": [
         "Config",
