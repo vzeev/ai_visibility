@@ -25,6 +25,9 @@ REQUIRED_PATHS = [
     "apps/config_service/app/db/models.py",
     "apps/config_service/app/db/repository.py",
     "apps/config_service/app/db/session.py",
+    "apps/visibility_service/app/db/models.py",
+    "apps/visibility_service/app/db/repository.py",
+    "apps/visibility_service/app/db/session.py",
     "apps/shared/ai/provider.py",
     "apps/shared/ai/idempotency.py",
     "apps/shared/ai/rate_limits.py",
@@ -33,8 +36,11 @@ REQUIRED_PATHS = [
     "apps/web/src/app/App.tsx",
     "scripts/run_web_check.py",
     "tests/services/test_config_service_api.py",
+    "tests/services/test_visibility_service_api.py",
     "tests/integration/test_config_service_postgres.py",
+    "tests/integration/test_visibility_service_postgres.py",
     "openspec/changes/m2-db-backed-config-service/specs/m2-db-backed-config-service/spec.md",
+    "openspec/changes/m3-visibility-queue-raw-persistence/specs/m3-visibility-queue-raw-persistence/spec.md",
 ]
 
 REQUIRED_MARKERS = {
@@ -71,6 +77,9 @@ REQUIRED_MARKERS = {
         "writeOnly: true",
         "/api/v1/rate-limits:",
         "/api/v1/models:",
+        "/api/v1/queue/claim:",
+        "/api/v1/queue/items/{run_item_id}/complete:",
+        "RawResponseItem:",
         "/api/v1/raw-responses:",
     ],
     "apps/config_service/app/db/repository.py": [
@@ -78,6 +87,13 @@ REQUIRED_MARKERS = {
         "create_provider_credential",
         "create_prompt_version",
         "create_rate_limit",
+    ],
+    "apps/visibility_service/app/db/repository.py": [
+        "class VisibilityRepository",
+        "claim_next_item",
+        "record_model_error",
+        "record_raw_response",
+        "build_raw_response_idempotency_key",
     ],
     "apps/shared/ai/provider.py": [
         "class AIProviderAdapter",

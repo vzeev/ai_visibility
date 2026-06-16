@@ -337,6 +337,12 @@ paths:
   /api/v1/runs:
     post:
       operationId: createVisibilityRun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRunRequest"
       responses:
         "202":
           description: Visibility run accepted.
@@ -365,6 +371,70 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/QueueState"
+  /api/v1/queue/claim:
+    post:
+      operationId: claimNextRunItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimRunItemRequest"
+      responses:
+        "200":
+          description: Claimed run item, or null when no item is available.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/RunItem"
+                  - type: "null"
+  /api/v1/queue/items/{run_item_id}/complete:
+    post:
+      operationId: completeRunItem
+      parameters:
+        - name: run_item_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompleteRunItemRequest"
+      responses:
+        "200":
+          description: Persisted raw response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RawResponseItem"
+  /api/v1/queue/items/{run_item_id}/fail:
+    post:
+      operationId: failRunItem
+      parameters:
+        - name: run_item_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FailRunItemRequest"
+      responses:
+        "200":
+          description: Updated run item after failure recording.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunItem"
   /api/v1/raw-responses:
     get:
       operationId: listRawResponses
@@ -739,13 +809,42 @@ components:
           additionalProperties: true
     RunBatch:
       type: object
-      required: [id, status]
+      required: [id, brand_id, prompt_set_id, status]
       properties:
         id:
           type: string
           format: uuid
+        brand_id:
+          type: string
+          format: uuid
+        prompt_set_id:
+          type: string
+          format: uuid
         status:
           type: string
+        item_count:
+          type: integer
+          nullable: true
+    CreateRunRequest:
+      type: object
+      required: [brand_id, prompt_set_id]
+      properties:
+        brand_id:
+          type: string
+          format: uuid
+        prompt_set_id:
+          type: string
+          format: uuid
+        sample_count:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 1
+        max_attempts:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 3
     QueueState:
       type: object
       required: [pending, running, succeeded, failed, throttled]
@@ -760,6 +859,123 @@ components:
           type: integer
         throttled:
           type: integer
+    ClaimRunItemRequest:
+      type: object
+      properties:
+        lease_seconds:
+          type: integer
+          minimum: 1
+          maximum: 3600
+          default: 300
+    RunItem:
+      type: object
+      required: [id, run_batch_id, prompt_version_id, provider_id, model_registry_id, sample_index, idempotency_key, status, attempt_count, max_attempts]
+      properties:
+        id:
+          type: string
+          format: uuid
+        run_batch_id:
+          type: string
+          format: uuid
+        prompt_version_id:
+          type: string
+          format: uuid
+        provider_id:
+          type: string
+          format: uuid
+        model_registry_id:
+          type: string
+          format: uuid
+        sample_index:
+          type: integer
+        idempotency_key:
+          type: string
+        status:
+          type: string
+        attempt_count:
+          type: integer
+        max_attempts:
+          type: integer
+        last_error:
+          type: string
+          nullable: true
+    CompleteRunItemRequest:
+      type: object
+      required: [provider_key, model_id, output_text, raw_request_json, raw_response_json, latency_ms]
+      properties:
+        provider_key:
+          type: string
+        model_id:
+          type: string
+        output_text:
+          type: string
+        raw_request_json:
+          type: object
+          additionalProperties: true
+        raw_response_json:
+          type: object
+          additionalProperties: true
+        usage_json:
+          type: object
+          additionalProperties: true
+        latency_ms:
+          type: integer
+          minimum: 0
+        provider_response_id:
+          type: string
+          nullable: true
+    FailRunItemRequest:
+      type: object
+      required: [error_type, error_message, retryable]
+      properties:
+        error_type:
+          type: string
+        error_message:
+          type: string
+        retryable:
+          type: boolean
+        retry_delay_seconds:
+          type: integer
+          minimum: 0
+          maximum: 3600
+          default: 0
+    RawResponseItem:
+      type: object
+      required: [id, run_item_id, idempotency_key, provider_id, model_id, prompt_text, output_text, raw_request_json, raw_response_json, usage_json, latency_ms, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        run_item_id:
+          type: string
+          format: uuid
+        idempotency_key:
+          type: string
+        provider_id:
+          type: string
+          format: uuid
+        model_id:
+          type: string
+        provider_response_id:
+          type: string
+          nullable: true
+        prompt_text:
+          type: string
+        output_text:
+          type: string
+        raw_request_json:
+          type: object
+          additionalProperties: true
+        raw_response_json:
+          type: object
+          additionalProperties: true
+        usage_json:
+          type: object
+          additionalProperties: true
+        latency_ms:
+          type: integer
+        status:
+          type: string
     RawResponsePage:
       type: object
       required: [items, total]
@@ -767,7 +983,7 @@ components:
         items:
           type: array
           items:
-            type: object
+            $ref: "#/components/schemas/RawResponseItem"
         total:
           type: integer
     VisibilitySummary:

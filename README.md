@@ -87,6 +87,27 @@ poetry run test-integration
 docker compose -f docker-compose.test.yml down
 ```
 
+## M3 Visibility Queue And Raw Persistence
+
+Visibility-service now owns the first real queue and raw-evidence path:
+
+- `POST /api/v1/runs` creates a run batch from a config snapshot.
+- Run creation expands active prompt versions across enabled visibility models
+  and requested sample count.
+- `GET /api/v1/queue` returns pending, running, succeeded, failed, and
+  throttled counts.
+- `POST /api/v1/queue/claim` claims the next pending/throttled item and sets a
+  lease.
+- `POST /api/v1/queue/items/{run_item_id}/complete` persists a raw response
+  through the provider-neutral response DTO shape.
+- `POST /api/v1/queue/items/{run_item_id}/fail` records model errors and applies
+  retry/throttle/fail transitions.
+- `GET /api/v1/raw-responses` supports text search plus limit/offset
+  pagination.
+
+Raw response completion is idempotent per run item: replaying the same
+completion returns the existing raw evidence row instead of creating a duplicate.
+
 ## Design Decisions
 
 Start with [docs/decisions/architecture.md](docs/decisions/architecture.md).
