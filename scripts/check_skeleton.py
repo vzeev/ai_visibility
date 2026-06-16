@@ -18,6 +18,7 @@ REQUIRED_PATHS = [
     "alembic/alembic.ini",
     "alembic/env.py",
     "alembic/versions/20260616_0924_initial_foundation.py",
+    "alembic/versions/20260616_2018_model_registry_created_at.py",
     "apps/config_service/app/main.py",
     "apps/visibility_service/app/main.py",
     "apps/insights_service/app/main.py",
@@ -37,6 +38,7 @@ REQUIRED_PATHS = [
     "apps/shared/ai/idempotency.py",
     "apps/shared/ai/openai_provider.py",
     "apps/shared/ai/rate_limits.py",
+    "apps/shared/http/cors.py",
     "apps/shared/ai/secrets.py",
     "apps/worker/app/visibility_worker.py",
     "apps/web/package.json",
@@ -46,7 +48,10 @@ REQUIRED_PATHS = [
     "apps/web/src/lib/useAsyncData.ts",
     "apps/web/src/vite-env.d.ts",
     "scripts/run_web_check.py",
+    "scripts/ai_visibility_tools/demo_e2e.py",
+    "tests/services/test_cors.py",
     "tests/services/test_config_service_api.py",
+    "tests/services/test_demo_e2e.py",
     "tests/services/test_visibility_service_api.py",
     "tests/services/test_visibility_worker.py",
     "tests/services/test_insights_service_api.py",
@@ -61,6 +66,8 @@ REQUIRED_PATHS = [
     "openspec/changes/m4-visibility-worker-fake-provider/specs/m4-visibility-worker-fake-provider/spec.md",
     "openspec/changes/m5-openai-runtime-readiness/specs/m5-openai-runtime-readiness/spec.md",
     "openspec/changes/m6-insights-deterministic-extraction/specs/m6-insights-deterministic-extraction/spec.md",
+    "openspec/changes/m7-ui-api-dashboard/specs/m7-ui-api-dashboard/spec.md",
+    "openspec/changes/m8-docker-e2e-polish/specs/m8-docker-e2e-polish/spec.md",
 ]
 
 REQUIRED_MARKERS = {
@@ -74,6 +81,7 @@ REQUIRED_MARKERS = {
     ],
     "pyproject.toml": [
         "pre-commit =",
+        "demo-e2e =",
         "doctor =",
         "fix =",
         "precommit =",
@@ -86,6 +94,8 @@ REQUIRED_MARKERS = {
         "CREATE TABLE config.prompts",
         "CREATE TABLE config.provider_credentials",
         "CREATE TABLE config.rate_limit_policies",
+        "CREATE TABLE config.model_registry",
+        "discovered_at timestamptz NOT NULL DEFAULT now()",
         "idempotency_key text NOT NULL UNIQUE",
         "CREATE TABLE visibility.raw_responses",
         "CREATE TABLE insights.extracted_mentions",
@@ -144,6 +154,18 @@ REQUIRED_MARKERS = {
         "class InMemoryRateLimitGate",
         "rate_limit_policy_from_mapping",
     ],
+    "apps/shared/http/cors.py": [
+        "AI_VISIBILITY_CORS_ORIGINS",
+        "CORSMiddleware",
+        "http://localhost:5173",
+    ],
+    "docker-compose.yml": [
+        "VITE_CONFIG_SERVICE_URL",
+        "VITE_VISIBILITY_SERVICE_URL",
+        "VITE_INSIGHTS_SERVICE_URL",
+        "AI_VISIBILITY_CORS_ORIGINS",
+        "visibility-worker",
+    ],
     "apps/worker/app/visibility_worker.py": [
         "class VisibilityWorker",
         "process_one",
@@ -200,6 +222,21 @@ REQUIRED_MARKERS = {
     "apps/web/src/features/insights/InsightsPanel.tsx": [
         "insightsApi.summaries",
         "Extraction evidence",
+    ],
+    "scripts/ai_visibility_tools/demo_e2e.py": [
+        "seed_brandlight_demo",
+        "run_brandlight_demo_smoke",
+        "VisibilityWorker",
+        "InsightsRepository",
+        "AI_VISIBILITY_DEMO_DATABASE_URL",
+    ],
+    "tests/services/test_cors.py": [
+        "http://localhost:5173",
+        "access-control-allow-origin",
+    ],
+    "tests/services/test_demo_e2e.py": [
+        "seed_brandlight_demo",
+        "run_brandlight_demo_smoke",
     ],
 }
 

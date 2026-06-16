@@ -69,6 +69,12 @@ def main_doctor() -> int:
     return main_test_all()
 
 
+def main_demo_e2e() -> int:
+    from scripts.ai_visibility_tools import demo_e2e
+
+    return demo_e2e.main(tuple(sys.argv[1:]))
+
+
 def main_fix() -> int:
     ruff_paths = ("apps", "tests", "scripts", "alembic")
     return _run_many(

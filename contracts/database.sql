@@ -121,6 +121,7 @@ CREATE TABLE config.model_registry (
     rate_limit_policy_id uuid REFERENCES config.rate_limit_policies(id),
     capability_json jsonb NOT NULL DEFAULT '{}'::jsonb,
     discovered_at timestamptz NOT NULL DEFAULT now(),
+    created_at timestamptz NOT NULL DEFAULT now(),
     updated_at timestamptz NOT NULL DEFAULT now(),
     UNIQUE (provider_id, model_id)
 );

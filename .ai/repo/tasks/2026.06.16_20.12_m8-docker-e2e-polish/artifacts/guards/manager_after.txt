@@ -1,0 +1,38 @@
+ M .env.example
+ M README.md
+ M apps/config_service/app/main.py
+ M apps/insights_service/app/main.py
+ M apps/visibility_service/app/main.py
+ M contracts/database.sql
+ M docker-compose.yml
+ M pyproject.toml
+ M scripts/ai_visibility_tools/cli_tasks.py
+ M scripts/check_skeleton.py
+ M tests/integration/test_config_service_postgres.py
+ M tests/integration/test_insights_service_postgres.py
+ M tests/integration/test_visibility_service_postgres.py
+ M tests/integration/test_visibility_worker_postgres.py
+?? .ai/repo/tasks/2026.06.16_20.12_m8-docker-e2e-polish/artifacts/contracts/implementation_contract.v1.md
+?? .ai/repo/tasks/2026.06.16_20.12_m8-docker-e2e-polish/artifacts/guards/manager_after.txt
+?? .ai/repo/tasks/2026.06.16_20.12_m8-docker-e2e-polish/artifacts/guards/manager_before.txt
+?? .ai/repo/tasks/2026.06.16_20.12_m8-docker-e2e-polish/artifacts/reconciliation/final_reconciliation.md
+?? .ai/repo/tasks/2026.06.16_20.12_m8-docker-e2e-polish/outputs/architect.md
+?? .ai/repo/tasks/2026.06.16_20.12_m8-docker-e2e-polish/outputs/code_simplifier.md
+?? .ai/repo/tasks/2026.06.16_20.12_m8-docker-e2e-polish/outputs/developer.md
+?? .ai/repo/tasks/2026.06.16_20.12_m8-docker-e2e-polish/outputs/manager.md
+?? .ai/repo/tasks/2026.06.16_20.12_m8-docker-e2e-polish/outputs/qa.md
+?? .ai/repo/tasks/2026.06.16_20.12_m8-docker-e2e-polish/outputs/reviewer.md
+?? .ai/repo/tasks/2026.06.16_20.12_m8-docker-e2e-polish/outputs/security.md
+?? .ai/repo/tasks/2026.06.16_20.12_m8-docker-e2e-polish/outputs/technical_writer.md
+?? .ai/repo/tasks/2026.06.16_20.12_m8-docker-e2e-polish/progress.md
+?? alembic/versions/20260616_2018_model_registry_created_at.py
+?? apps/shared/http/__init__.py
+?? apps/shared/http/cors.py
+?? openspec/changes/m8-docker-e2e-polish/design.md
+?? openspec/changes/m8-docker-e2e-polish/proposal.md
+?? openspec/changes/m8-docker-e2e-polish/specs/m8-docker-e2e-polish/spec.md
+?? openspec/changes/m8-docker-e2e-polish/tasks.md
+?? scripts/ai_visibility_tools/demo_e2e.py
+?? tests/integration/db_helpers.py
+?? tests/services/test_cors.py
+?? tests/services/test_demo_e2e.py

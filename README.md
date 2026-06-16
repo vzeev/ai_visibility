@@ -36,6 +36,7 @@ poetry run test-unit
 poetry run test-service
 poetry run test-integration
 poetry run check-skeleton
+poetry run demo-e2e
 poetry run web-check
 docker compose config
 cd apps/web
@@ -198,6 +199,47 @@ Run the dashboard locally:
 cd apps/web
 npm run dev -- --host 127.0.0.1
 ```
+
+## M8 Docker E2E Polish
+
+The repo now has a deterministic end-to-end smoke path for the local demo:
+
+- seeds or reuses Brandlight config, competitors, prompts, fake provider, model,
+  credential metadata, and rate limits
+- creates a visibility run from the active config snapshot
+- processes the run through the fake provider worker
+- persists raw visibility responses
+- runs deterministic insights extraction and writes a summary
+- prints the run IDs and evidence counts as JSON
+
+Start the local stack:
+
+```bash
+docker compose up -d postgres config-service visibility-service insights-service web
+```
+
+Run the smoke command against the local Postgres database:
+
+```bash
+$env:AI_VISIBILITY_DEMO_DATABASE_URL="postgresql+psycopg://ai_visibility:ai_visibility_local@localhost:5432/ai_visibility"
+poetry run demo-e2e
+```
+
+For an already migrated database, skip migrations:
+
+```bash
+poetry run demo-e2e --skip-migrations
+```
+
+The Vite UI can call local backend APIs through default local CORS origins:
+
+```bash
+AI_VISIBILITY_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
+```
+
+`AI_VISIBILITY_DEMO_FAKE_TOKEN` can be set when you want the demo credential
+metadata to use a specific local fake token value; it is optional and not needed
+for provider execution.
 
 ## Design Decisions
 

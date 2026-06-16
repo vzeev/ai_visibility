@@ -15,6 +15,7 @@ from apps.config_service.app.db import models as config_models
 from apps.insights_service.app.db import models as insights_models
 from apps.insights_service.app.db.repository import InsightsRepository
 from apps.visibility_service.app.db import models as visibility_models
+from tests.integration.db_helpers import reset_postgres_schema
 
 TEST_DATABASE_URL = os.environ.get("AI_VISIBILITY_TEST_DATABASE_URL")
 
@@ -29,6 +30,7 @@ class InsightsServicePostgresIntegrationTests(unittest.TestCase):
         original_database_url = os.environ.get("DATABASE_URL")
         os.environ["DATABASE_URL"] = TEST_DATABASE_URL
         try:
+            reset_postgres_schema(TEST_DATABASE_URL)
             alembic_config = Config("alembic/alembic.ini")
             command.upgrade(alembic_config, "head")
             engine = create_engine(TEST_DATABASE_URL, pool_pre_ping=True)

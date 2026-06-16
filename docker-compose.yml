@@ -23,6 +23,7 @@ services:
     environment:
       SERVICE_NAME: config-service
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ai_visibility:ai_visibility_local@postgres:5432/ai_visibility}
+      AI_VISIBILITY_CORS_ORIGINS: ${AI_VISIBILITY_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
     ports:
       - "8001:8001"
     depends_on:
@@ -37,6 +38,7 @@ services:
     environment:
       SERVICE_NAME: visibility-service
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ai_visibility:ai_visibility_local@postgres:5432/ai_visibility}
+      AI_VISIBILITY_CORS_ORIGINS: ${AI_VISIBILITY_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
     ports:
       - "8002:8002"
     depends_on:
@@ -51,6 +53,7 @@ services:
     environment:
       SERVICE_NAME: insights-service
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ai_visibility:ai_visibility_local@postgres:5432/ai_visibility}
+      AI_VISIBILITY_CORS_ORIGINS: ${AI_VISIBILITY_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
     ports:
       - "8003:8003"
     depends_on:
@@ -65,6 +68,7 @@ services:
     environment:
       SERVICE_NAME: visibility-worker
       DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ai_visibility:ai_visibility_local@postgres:5432/ai_visibility}
+      WORKER_MAX_ITEMS: ${WORKER_MAX_ITEMS:-25}
     depends_on:
       postgres:
         condition: service_healthy
@@ -74,9 +78,9 @@ services:
     working_dir: /app/apps/web
     command: ["sh", "-c", "npm install && npm run dev -- --host 0.0.0.0"]
     environment:
-      VITE_CONFIG_API_URL: http://localhost:8001
-      VITE_VISIBILITY_API_URL: http://localhost:8002
-      VITE_INSIGHTS_API_URL: http://localhost:8003
+      VITE_CONFIG_SERVICE_URL: http://localhost:8001
+      VITE_VISIBILITY_SERVICE_URL: http://localhost:8002
+      VITE_INSIGHTS_SERVICE_URL: http://localhost:8003
     ports:
       - "5173:5173"
     volumes:

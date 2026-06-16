@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
+from apps.shared.http.cors import add_cors_middleware
 from apps.visibility_service.app.api.routes import router
 from apps.visibility_service.app.db.repository import ConflictError, NotFoundError
 
@@ -19,6 +20,7 @@ def readyz() -> dict[str, str]:
 
 def create_app() -> FastAPI:
     app = FastAPI(title="AI Visibility Service", version="0.1.0")
+    add_cors_middleware(app)
     app.add_api_route("/healthz", healthz, methods=["GET"])
     app.add_api_route("/readyz", readyz, methods=["GET"])
     app.add_exception_handler(NotFoundError, not_found_handler)
