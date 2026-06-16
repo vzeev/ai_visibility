@@ -51,6 +51,8 @@ export type RateLimitPolicy = {
   tokens_per_minute: number | null;
   min_delay_ms: number;
   max_retries: number;
+  backoff_base_ms: number;
+  backoff_max_ms: number;
 };
 
 export type ModelRegistry = {
@@ -171,7 +173,28 @@ export const configApi = {
   providers: () => getJson<Provider[]>(configBaseUrl, "/api/v1/providers"),
   credentials: () => getJson<ProviderCredential[]>(configBaseUrl, "/api/v1/provider-credentials"),
   rateLimits: () => getJson<RateLimitPolicy[]>(configBaseUrl, "/api/v1/rate-limits"),
-  models: () => getJson<ModelRegistry[]>(configBaseUrl, "/api/v1/models")
+  models: () => getJson<ModelRegistry[]>(configBaseUrl, "/api/v1/models"),
+  createCredential: (payload: { provider_id: string; label: string; token: string }) =>
+    postJson<ProviderCredential>(configBaseUrl, "/api/v1/provider-credentials", payload),
+  createPrompt: (payload: {
+    prompt_set_id: string;
+    name: string;
+    intent: string;
+    prompt_text: string;
+  }) => postJson<Prompt>(configBaseUrl, "/api/v1/prompts", payload),
+  createPromptVersion: (promptId: string, payload: { prompt_text: string }) =>
+    postJson<Prompt>(configBaseUrl, `/api/v1/prompts/${promptId}/versions`, payload),
+  createRateLimit: (payload: {
+    provider_id: string;
+    model_id: string | null;
+    max_concurrent_requests: number;
+    requests_per_minute: number;
+    tokens_per_minute: number | null;
+    min_delay_ms: number;
+    max_retries: number;
+    backoff_base_ms: number;
+    backoff_max_ms: number;
+  }) => postJson<RateLimitPolicy>(configBaseUrl, "/api/v1/rate-limits", payload)
 };
 
 export const visibilityApi = {

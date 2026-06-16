@@ -27,4 +27,3 @@ M8 proved the full Docker-backed data flow. M9 turns that working backend state 
 - M8 change: `openspec/changes/m8-docker-e2e-polish`
 - Architecture: `.ai/repo/tasks/2026.06.16_08.02_brandlight-visibility-architecture/artifacts/spec/architecture_proposal.md`
 - Implementation contract: `.ai/repo/tasks/2026.06.16_20.46_m9-ui-demo-polish/artifacts/contracts/implementation_contract.v1.md`
-

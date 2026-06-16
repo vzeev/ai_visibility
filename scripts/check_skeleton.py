@@ -70,6 +70,7 @@ REQUIRED_PATHS = [
     "openspec/changes/m7-ui-api-dashboard/specs/m7-ui-api-dashboard/spec.md",
     "openspec/changes/m8-docker-e2e-polish/specs/m8-docker-e2e-polish/spec.md",
     "openspec/changes/m9-ui-demo-polish/specs/m9-ui-demo-polish/spec.md",
+    "openspec/changes/m10-config-authoring-ui/specs/m10-config-authoring-ui/spec.md",
 ]
 
 REQUIRED_MARKERS = {
@@ -210,6 +211,9 @@ REQUIRED_MARKERS = {
         "visibilityApi",
         "insightsApi",
         "extractRunBatch",
+        "createCredential",
+        "createPromptVersion",
+        "createRateLimit",
     ],
     "apps/web/src/features/overview/DemoOverview.tsx": [
         "Demo brand",
@@ -221,6 +225,11 @@ REQUIRED_MARKERS = {
         "configApi",
         "Config service unavailable",
         "Active setup",
+        "Config authoring",
+        "Save credential",
+        "Create prompt",
+        "Activate new version",
+        "Create rate limit",
     ],
     "apps/web/src/features/queue/QueuePanel.tsx": [
         "visibilityApi.createRun",

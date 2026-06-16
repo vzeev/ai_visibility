@@ -95,4 +95,3 @@ function shortId(id: string): string {
 function numberValue(value: unknown): number {
   return typeof value === "number" ? value : 0;
 }
-

@@ -255,6 +255,20 @@ visibility run with the existing insights-service API. The Visibility tab now
 shows raw response IDs, run item IDs, idempotency keys, request JSON, and
 response JSON for evidence review.
 
+## M10 Config Authoring UI
+
+The Config tab now supports demo-critical configuration writes through existing
+config-service APIs:
+
+- create provider credentials with write-only token input and redacted readback
+- create prompts under existing prompt sets
+- create new active prompt versions without deleting prompt history
+- create provider-level or model-level rate-limit policies
+
+After each successful write, the Config tab refreshes the live configuration
+data. Token values are cleared after credential submission and are never shown in
+the credential list.
+
 ## Design Decisions
 
 Start with [docs/decisions/architecture.md](docs/decisions/architecture.md).

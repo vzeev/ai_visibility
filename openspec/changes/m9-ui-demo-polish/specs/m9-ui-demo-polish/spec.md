@@ -33,4 +33,3 @@ The Insights tab SHALL let the operator run deterministic extraction for the lat
 - THEN the UI calls the existing insights run-batch extraction API
 - AND refreshes summaries after the request succeeds
 - AND presents inline success or error state.
-

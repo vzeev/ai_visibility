@@ -26,4 +26,3 @@ Use existing restrained Brandlight-inspired palette and 6-8px radii. Avoid neste
 ## Verification
 
 Run static checks and browser validation against local services seeded by M8 `demo-e2e`.
-
