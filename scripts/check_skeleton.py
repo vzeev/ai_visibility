@@ -22,6 +22,9 @@ REQUIRED_PATHS = [
     "apps/visibility_service/app/main.py",
     "apps/insights_service/app/main.py",
     "apps/worker/app/main.py",
+    "apps/config_service/app/db/models.py",
+    "apps/config_service/app/db/repository.py",
+    "apps/config_service/app/db/session.py",
     "apps/shared/ai/provider.py",
     "apps/shared/ai/idempotency.py",
     "apps/shared/ai/rate_limits.py",
@@ -29,6 +32,9 @@ REQUIRED_PATHS = [
     "apps/web/package.json",
     "apps/web/src/app/App.tsx",
     "scripts/run_web_check.py",
+    "tests/services/test_config_service_api.py",
+    "tests/integration/test_config_service_postgres.py",
+    "openspec/changes/m2-db-backed-config-service/specs/m2-db-backed-config-service/spec.md",
 ]
 
 REQUIRED_MARKERS = {
@@ -59,10 +65,19 @@ REQUIRED_MARKERS = {
         "CREATE TABLE insights.extracted_mentions",
     ],
     "contracts/openapi.yaml": [
+        "/api/v1/prompt-sets:",
+        "/api/v1/providers:",
         "/api/v1/provider-credentials:",
         "writeOnly: true",
         "/api/v1/rate-limits:",
+        "/api/v1/models:",
         "/api/v1/raw-responses:",
+    ],
+    "apps/config_service/app/db/repository.py": [
+        "class ConfigRepository",
+        "create_provider_credential",
+        "create_prompt_version",
+        "create_rate_limit",
     ],
     "apps/shared/ai/provider.py": [
         "class AIProviderAdapter",

@@ -64,6 +64,29 @@ The hook setup mirrors the Finfrax baseline where it fits this repo:
 - Pyright with the root `pyproject.toml`
 - local skeleton, Python test, and web type-check hooks
 
+## M2 Config Service
+
+Config-service now persists its core configuration APIs through SQLAlchemy
+sessions backed by the `config.*` tables:
+
+- brands, competitors, and products
+- prompt sets, prompts, and prompt versions
+- providers and write-only provider credential metadata
+- provider/model rate-limit policies
+- model registry entries and `enabled_for_visibility`
+
+Provider token values are accepted only as write-only request fields. Responses
+return redacted fingerprints and metadata, not saved token values.
+
+Postgres integration verification is opt-in:
+
+```bash
+docker compose -f docker-compose.test.yml up -d postgres-test
+$env:AI_VISIBILITY_TEST_DATABASE_URL="postgresql+psycopg://ai_visibility:ai_visibility_local@localhost:55432/ai_visibility_test"
+poetry run test-integration
+docker compose -f docker-compose.test.yml down
+```
+
 ## Design Decisions
 
 Start with [docs/decisions/architecture.md](docs/decisions/architecture.md).

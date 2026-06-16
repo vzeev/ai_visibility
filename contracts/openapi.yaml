@@ -48,9 +48,130 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Brand"
+  /api/v1/brands/{brand_id}/competitors:
+    get:
+      operationId: listCompetitors
+      parameters:
+        - name: brand_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Competitor list for a brand.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Competitor"
+    post:
+      operationId: createCompetitor
+      parameters:
+        - name: brand_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCompetitorRequest"
+      responses:
+        "201":
+          description: Created competitor.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Competitor"
+  /api/v1/brands/{brand_id}/products:
+    get:
+      operationId: listProducts
+      parameters:
+        - name: brand_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Product list for a brand.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      operationId: createProduct
+      parameters:
+        - name: brand_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProductRequest"
+      responses:
+        "201":
+          description: Created product.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+  /api/v1/prompt-sets:
+    get:
+      operationId: listPromptSets
+      parameters:
+        - name: brand_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Prompt set list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PromptSet"
+    post:
+      operationId: createPromptSet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePromptSetRequest"
+      responses:
+        "201":
+          description: Created prompt set.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PromptSet"
   /api/v1/prompts:
     get:
       operationId: listPrompts
+      parameters:
+        - name: prompt_set_id
+          in: query
+          schema:
+            type: string
+            format: uuid
       responses:
         "200":
           description: Prompt list.
@@ -75,7 +196,68 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Prompt"
+  /api/v1/prompts/{prompt_id}/versions:
+    post:
+      operationId: createPromptVersion
+      parameters:
+        - name: prompt_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePromptVersionRequest"
+      responses:
+        "201":
+          description: Created active prompt version.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Prompt"
+  /api/v1/providers:
+    get:
+      operationId: listProviders
+      responses:
+        "200":
+          description: Provider list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Provider"
+    post:
+      operationId: createProvider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProviderRequest"
+      responses:
+        "201":
+          description: Created provider.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Provider"
   /api/v1/provider-credentials:
+    get:
+      operationId: listProviderCredentials
+      responses:
+        "200":
+          description: Redacted provider credential metadata list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProviderCredential"
     post:
       operationId: createProviderCredential
       description: Saves a provider token as a write-only secret and returns redacted metadata.
@@ -111,7 +293,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/RateLimitPolicy"
+              $ref: "#/components/schemas/CreateRateLimitPolicyRequest"
       responses:
         "201":
           description: Created rate limit policy.
@@ -119,6 +301,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RateLimitPolicy"
+  /api/v1/models:
+    get:
+      operationId: listModels
+      parameters:
+        - name: provider_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Model registry entries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ModelRegistry"
+    post:
+      operationId: createModelRegistryEntry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateModelRegistryRequest"
+      responses:
+        "201":
+          description: Created model registry entry.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelRegistry"
   /api/v1/runs:
     post:
       operationId: createVisibilityRun
@@ -218,6 +433,84 @@ components:
           type: string
         website_url:
           type: string
+    Competitor:
+      type: object
+      required: [id, brand_id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        brand_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        website_url:
+          type: string
+          nullable: true
+    CreateCompetitorRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        website_url:
+          type: string
+          nullable: true
+    Product:
+      type: object
+      required: [id, brand_id, name, description]
+      properties:
+        id:
+          type: string
+          format: uuid
+        brand_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+    CreateProductRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          default: ""
+    PromptSet:
+      type: object
+      required: [id, brand_id, name, description, is_active]
+      properties:
+        id:
+          type: string
+          format: uuid
+        brand_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        is_active:
+          type: boolean
+    CreatePromptSetRequest:
+      type: object
+      required: [brand_id, name]
+      properties:
+        brand_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          default: ""
+        is_active:
+          type: boolean
+          default: true
     Prompt:
       type: object
       required: [id, prompt_set_id, name, intent, active_version]
@@ -258,6 +551,40 @@ components:
           type: string
         prompt_text:
           type: string
+    CreatePromptVersionRequest:
+      type: object
+      required: [prompt_text]
+      properties:
+        prompt_text:
+          type: string
+    Provider:
+      type: object
+      required: [id, provider_key, display_name, provider_kind, is_active]
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider_key:
+          type: string
+        display_name:
+          type: string
+        provider_kind:
+          type: string
+        is_active:
+          type: boolean
+    CreateProviderRequest:
+      type: object
+      required: [provider_key, display_name, provider_kind]
+      properties:
+        provider_key:
+          type: string
+        display_name:
+          type: string
+        provider_kind:
+          type: string
+        is_active:
+          type: boolean
+          default: true
     CreateProviderCredentialRequest:
       type: object
       required: [provider_id, label, token]
@@ -291,6 +618,42 @@ components:
           type: string
           format: date-time
           nullable: true
+    CreateRateLimitPolicyRequest:
+      type: object
+      required: [provider_id, max_concurrent_requests, requests_per_minute]
+      properties:
+        provider_id:
+          type: string
+          format: uuid
+        model_id:
+          type: string
+          nullable: true
+        max_concurrent_requests:
+          type: integer
+          minimum: 1
+        requests_per_minute:
+          type: integer
+          minimum: 1
+        tokens_per_minute:
+          type: integer
+          minimum: 1
+          nullable: true
+        min_delay_ms:
+          type: integer
+          minimum: 0
+          default: 0
+        max_retries:
+          type: integer
+          minimum: 0
+          default: 3
+        backoff_base_ms:
+          type: integer
+          minimum: 0
+          default: 1000
+        backoff_max_ms:
+          type: integer
+          minimum: 0
+          default: 60000
     RateLimitPolicy:
       type: object
       required: [provider_id, max_concurrent_requests, requests_per_minute, min_delay_ms, max_retries, backoff_base_ms, backoff_max_ms]
@@ -319,6 +682,61 @@ components:
           type: integer
         backoff_max_ms:
           type: integer
+    ModelRegistry:
+      type: object
+      required: [id, provider_id, model_id, display_name, is_available, enabled_for_visibility, capability_json]
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider_id:
+          type: string
+          format: uuid
+        model_id:
+          type: string
+        display_name:
+          type: string
+        owned_by:
+          type: string
+          nullable: true
+        is_available:
+          type: boolean
+        enabled_for_visibility:
+          type: boolean
+        rate_limit_policy_id:
+          type: string
+          format: uuid
+          nullable: true
+        capability_json:
+          type: object
+          additionalProperties: true
+    CreateModelRegistryRequest:
+      type: object
+      required: [provider_id, model_id, display_name]
+      properties:
+        provider_id:
+          type: string
+          format: uuid
+        model_id:
+          type: string
+        display_name:
+          type: string
+        owned_by:
+          type: string
+          nullable: true
+        is_available:
+          type: boolean
+          default: true
+        enabled_for_visibility:
+          type: boolean
+          default: false
+        rate_limit_policy_id:
+          type: string
+          format: uuid
+          nullable: true
+        capability_json:
+          type: object
+          additionalProperties: true
     RunBatch:
       type: object
       required: [id, status]
