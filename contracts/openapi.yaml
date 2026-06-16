@@ -460,9 +460,87 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RawResponsePage"
+  /api/v1/extractions/raw-responses/{raw_response_id}:
+    post:
+      operationId: extractRawResponse
+      parameters:
+        - name: raw_response_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExtractionRequest"
+      responses:
+        "202":
+          description: Completed or reused extraction run for one raw response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExtractionRun"
+  /api/v1/extractions/run-batches/{run_batch_id}:
+    post:
+      operationId: extractRunBatch
+      parameters:
+        - name: run_batch_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExtractionRequest"
+      responses:
+        "202":
+          description: Completed or reused extraction runs and batch summary.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BatchExtractionResponse"
+  /api/v1/extraction-runs/{extraction_run_id}:
+    get:
+      operationId: getExtractionRun
+      parameters:
+        - name: extraction_run_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Extraction run with derived mentions and citations.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExtractionRun"
   /api/v1/summaries:
     get:
       operationId: listVisibilitySummaries
+      parameters:
+        - name: brand_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: run_batch_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: extraction_version
+          in: query
+          schema:
+            type: string
       responses:
         "200":
           description: Visibility summaries.
@@ -986,13 +1064,136 @@ components:
             $ref: "#/components/schemas/RawResponseItem"
         total:
           type: integer
-    VisibilitySummary:
+    ExtractionRequest:
       type: object
-      required: [id, summary_json]
+      properties:
+        extraction_version:
+          type: string
+          default: deterministic-v1
+    ExtractedMention:
+      type: object
+      required:
+        - id
+        - extraction_run_id
+        - entity_type
+        - entity_name
+        - mention_text
+        - sentiment_label
+        - confidence
+        - evidence_json
       properties:
         id:
           type: string
           format: uuid
+        extraction_run_id:
+          type: string
+          format: uuid
+        entity_type:
+          type: string
+        entity_name:
+          type: string
+        mention_text:
+          type: string
+        sentiment_label:
+          type: string
+          enum: [positive, neutral, negative]
+        confidence:
+          type: number
+        evidence_json:
+          type: object
+          additionalProperties: true
+    ExtractedCitation:
+      type: object
+      required:
+        - id
+        - extraction_run_id
+        - url
+        - domain
+        - evidence_json
+      properties:
+        id:
+          type: string
+          format: uuid
+        extraction_run_id:
+          type: string
+          format: uuid
+        url:
+          type: string
+        domain:
+          type: string
+        title:
+          type: string
+          nullable: true
+        evidence_json:
+          type: object
+          additionalProperties: true
+    ExtractionRun:
+      type: object
+      required:
+        - id
+        - raw_response_id
+        - extraction_version
+        - status
+        - mentions
+        - citations
+      properties:
+        id:
+          type: string
+          format: uuid
+        raw_response_id:
+          type: string
+          format: uuid
+        extraction_version:
+          type: string
+        status:
+          type: string
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        mentions:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExtractedMention"
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/ExtractedCitation"
+    BatchExtractionResponse:
+      type: object
+      required:
+        - run_batch_id
+        - extraction_version
+        - raw_response_count
+        - extraction_run_count
+        - summary
+      properties:
+        run_batch_id:
+          type: string
+          format: uuid
+        extraction_version:
+          type: string
+        raw_response_count:
+          type: integer
+        extraction_run_count:
+          type: integer
+        summary:
+          $ref: "#/components/schemas/VisibilitySummary"
+    VisibilitySummary:
+      type: object
+      required: [id, brand_id, run_batch_id, extraction_version, summary_json]
+      properties:
+        id:
+          type: string
+          format: uuid
+        brand_id:
+          type: string
+          format: uuid
+        run_batch_id:
+          type: string
+          format: uuid
+        extraction_version:
+          type: string
         summary_json:
           type: object
           additionalProperties: true

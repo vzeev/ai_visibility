@@ -21,6 +21,10 @@ REQUIRED_PATHS = [
     "apps/config_service/app/main.py",
     "apps/visibility_service/app/main.py",
     "apps/insights_service/app/main.py",
+    "apps/insights_service/app/db/models.py",
+    "apps/insights_service/app/db/repository.py",
+    "apps/insights_service/app/db/session.py",
+    "apps/insights_service/app/domain/extractor.py",
     "apps/worker/app/main.py",
     "apps/config_service/app/db/models.py",
     "apps/config_service/app/db/repository.py",
@@ -41,14 +45,18 @@ REQUIRED_PATHS = [
     "tests/services/test_config_service_api.py",
     "tests/services/test_visibility_service_api.py",
     "tests/services/test_visibility_worker.py",
+    "tests/services/test_insights_service_api.py",
     "tests/integration/test_config_service_postgres.py",
     "tests/integration/test_visibility_service_postgres.py",
     "tests/integration/test_visibility_worker_postgres.py",
+    "tests/integration/test_insights_service_postgres.py",
+    "tests/unit/test_insights_extractor.py",
     "tests/unit/test_openai_provider_adapter.py",
     "openspec/changes/m2-db-backed-config-service/specs/m2-db-backed-config-service/spec.md",
     "openspec/changes/m3-visibility-queue-raw-persistence/specs/m3-visibility-queue-raw-persistence/spec.md",
     "openspec/changes/m4-visibility-worker-fake-provider/specs/m4-visibility-worker-fake-provider/spec.md",
     "openspec/changes/m5-openai-runtime-readiness/specs/m5-openai-runtime-readiness/spec.md",
+    "openspec/changes/m6-insights-deterministic-extraction/specs/m6-insights-deterministic-extraction/spec.md",
 ]
 
 REQUIRED_MARKERS = {
@@ -89,6 +97,9 @@ REQUIRED_MARKERS = {
         "/api/v1/queue/items/{run_item_id}/complete:",
         "RawResponseItem:",
         "/api/v1/raw-responses:",
+        "/api/v1/extractions/raw-responses/{raw_response_id}:",
+        "/api/v1/extractions/run-batches/{run_batch_id}:",
+        "ExtractionRun:",
     ],
     "apps/config_service/app/db/repository.py": [
         "class ConfigRepository",
@@ -138,6 +149,23 @@ REQUIRED_MARKERS = {
         "FakeAIProviderAdapter",
         "record_raw_response",
         "record_model_error",
+    ],
+    "apps/insights_service/app/domain/extractor.py": [
+        "class DeterministicInsightExtractor",
+        "DEFAULT_EXTRACTION_VERSION",
+        "EntityAliases",
+    ],
+    "apps/insights_service/app/db/repository.py": [
+        "class InsightsRepository",
+        "extract_raw_response",
+        "extract_run_batch",
+        "raw_response_id",
+        "VisibilitySummary",
+    ],
+    "apps/insights_service/app/api/routes.py": [
+        "/extractions/raw-responses/{raw_response_id}",
+        "/extractions/run-batches/{run_batch_id}",
+        "/summaries",
     ],
     "apps/web/src/app/App.tsx": [
         "Config",

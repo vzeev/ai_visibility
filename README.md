@@ -152,6 +152,25 @@ $env:AI_VISIBILITY_OPENAI_API_KEY="..."
 poetry run python -m apps.worker.app.main
 ```
 
+## M6 Insights Deterministic Extraction
+
+Insights-service now turns stored raw visibility responses into versioned,
+evidence-linked derived records:
+
+- `POST /api/v1/extractions/raw-responses/{raw_response_id}` creates or reuses
+  a completed extraction run for one raw response.
+- `POST /api/v1/extractions/run-batches/{run_batch_id}` extracts every raw
+  response in a run batch and stores a versioned visibility summary.
+- `GET /api/v1/extraction-runs/{extraction_run_id}` returns mentions and
+  citations for one extraction run.
+- `GET /api/v1/summaries` returns filterable visibility summaries.
+- Mentions and citations include `raw_response_id`, source, offsets, and snippet
+  evidence in `evidence_json`.
+- Rerunning the same raw response and extraction version is idempotent.
+
+M6 is deterministic only: no LLM extraction, no scheduler, and no React UI work.
+Raw visibility rows remain immutable inputs.
+
 ## Design Decisions
 
 Start with [docs/decisions/architecture.md](docs/decisions/architecture.md).

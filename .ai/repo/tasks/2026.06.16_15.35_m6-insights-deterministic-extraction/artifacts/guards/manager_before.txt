@@ -1,0 +1,1 @@
+?? .ai/repo/tasks/2026.06.16_15.35_m6-insights-deterministic-extraction/artifacts/guards/manager_before.txt
