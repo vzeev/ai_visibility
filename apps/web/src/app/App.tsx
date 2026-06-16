@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ConfigPanel } from "../features/config/ConfigPanel";
 import { InsightsPanel } from "../features/insights/InsightsPanel";
+import { DemoOverview } from "../features/overview/DemoOverview";
 import { QueuePanel } from "../features/queue/QueuePanel";
 import { VisibilityPanel } from "../features/visibility/VisibilityPanel";
 
@@ -57,6 +58,8 @@ export function App() {
             </div>
           </div>
         </header>
+
+        <DemoOverview />
 
         {activeTab === "config" && <ConfigPanel />}
         {activeTab === "queue" && <QueuePanel />}

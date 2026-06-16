@@ -143,6 +143,14 @@ export type VisibilitySummary = {
   summary_json: Record<string, unknown>;
 };
 
+export type BatchExtractionResponse = {
+  run_batch_id: string;
+  extraction_version: string;
+  raw_response_count: number;
+  extraction_run_count: number;
+  summary: VisibilitySummary;
+};
+
 const configBaseUrl = serviceBaseUrl("VITE_CONFIG_SERVICE_URL", "http://localhost:8001");
 const visibilityBaseUrl = serviceBaseUrl(
   "VITE_VISIBILITY_SERVICE_URL",
@@ -189,6 +197,10 @@ export const visibilityApi = {
 
 export const insightsApi = {
   summaries: () => getJson<VisibilitySummary[]>(insightsBaseUrl, "/api/v1/summaries"),
+  extractRunBatch: (id: string, extractionVersion = "deterministic-v1") =>
+    postJson<BatchExtractionResponse>(insightsBaseUrl, `/api/v1/extractions/run-batches/${id}`, {
+      extraction_version: extractionVersion
+    }),
   extractionRun: (id: string) =>
     getJson<ExtractionRun>(insightsBaseUrl, `/api/v1/extraction-runs/${id}`)
 };

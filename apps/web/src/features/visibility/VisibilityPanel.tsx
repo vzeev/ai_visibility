@@ -144,6 +144,14 @@ function RawResponseDetail({ item }: { item: RawResponseItem | null }) {
           <dd className="mono-cell">{item.id}</dd>
         </div>
         <div>
+          <dt>Run item</dt>
+          <dd className="mono-cell">{item.run_item_id}</dd>
+        </div>
+        <div>
+          <dt>Idempotency key</dt>
+          <dd className="mono-cell">{item.idempotency_key}</dd>
+        </div>
+        <div>
           <dt>Provider response</dt>
           <dd>{item.provider_response_id ?? "not provided"}</dd>
         </div>
@@ -160,6 +168,8 @@ function RawResponseDetail({ item }: { item: RawResponseItem | null }) {
       <p className="response-text">{item.output_text}</p>
       <h3>Raw request</h3>
       <pre>{jsonPreview(item.raw_request_json)}</pre>
+      <h3>Raw response</h3>
+      <pre>{jsonPreview(item.raw_response_json)}</pre>
     </aside>
   );
 }

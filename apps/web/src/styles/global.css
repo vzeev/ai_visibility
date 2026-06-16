@@ -208,6 +208,58 @@ h3 {
   gap: 8px;
 }
 
+.demo-overview {
+  display: grid;
+  grid-template-columns: 1.35fr repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+}
+
+.overview-tile {
+  display: grid;
+  gap: 5px;
+  min-height: 104px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-panel);
+}
+
+.overview-tile.primary {
+  border-color: rgba(27, 103, 255, 0.35);
+  background: linear-gradient(135deg, #ffffff, #edf6ff);
+}
+
+.overview-tile.insight {
+  border-color: rgba(15, 143, 92, 0.28);
+}
+
+.overview-tile.warning {
+  border-color: #f0c77d;
+  background: #fff8ea;
+}
+
+.overview-tile span {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.overview-tile strong {
+  overflow-wrap: anywhere;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.overview-tile em {
+  color: var(--color-muted);
+  font-size: 13px;
+  font-style: normal;
+  line-height: 1.4;
+}
+
 .filter-chip,
 .module-chip {
   display: inline-flex;
@@ -249,6 +301,46 @@ h3 {
 
 .panel {
   padding: 18px;
+}
+
+.demo-focus,
+.analysis-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.readiness-strip {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.readiness-pill {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.readiness-pill.ready {
+  border-color: rgba(15, 143, 92, 0.24);
+  background: #e9f8f1;
+  color: var(--color-green);
+}
+
+.readiness-pill strong {
+  color: var(--color-text);
 }
 
 .span-2 {
@@ -549,6 +641,13 @@ label,
   font-weight: 700;
 }
 
+.inline-success {
+  margin: 0 0 12px;
+  color: var(--color-green);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .state-panel {
   display: grid;
   min-height: 150px;
@@ -647,6 +746,7 @@ label,
   }
 
   .content-grid,
+  .demo-overview,
   .evidence-grid,
   .form-grid {
     grid-template-columns: 1fr;
@@ -677,6 +777,8 @@ label,
   }
 
   .panel-header,
+  .analysis-panel,
+  .demo-focus,
   .toolbar-controls,
   .raw-row,
   .prompt-row,
@@ -699,5 +801,9 @@ label,
 
   .module-list {
     grid-template-columns: 1fr;
+  }
+
+  .readiness-strip {
+    justify-content: flex-start;
   }
 }

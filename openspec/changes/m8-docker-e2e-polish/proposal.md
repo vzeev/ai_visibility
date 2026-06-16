@@ -29,4 +29,3 @@ M1-M7 built the foundations, backend services, deterministic worker, OpenAI-read
 - Architecture proposal: `.ai/repo/tasks/2026.06.16_08.02_brandlight-visibility-architecture/artifacts/spec/architecture_proposal.md`
 - M7 UI API dashboard change: `openspec/changes/m7-ui-api-dashboard`
 - Implementation contract: `.ai/repo/tasks/2026.06.16_20.12_m8-docker-e2e-polish/artifacts/contracts/implementation_contract.v1.md`
-

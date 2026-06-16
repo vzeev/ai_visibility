@@ -1,20 +1,30 @@
 import { useMemo, useState } from "react";
 import { EmptyState, ErrorState, LoadingState } from "../../components/DataState";
-import { insightsApi, services, type ExtractionRun, type VisibilitySummary } from "../../lib/api";
+import {
+  insightsApi,
+  services,
+  visibilityApi,
+  type ExtractionRun,
+  type RunBatch,
+  type VisibilitySummary
+} from "../../lib/api";
 import type { AsyncState } from "../../lib/useAsyncData";
 import { useAsyncData } from "../../lib/useAsyncData";
 
 export function InsightsPanel() {
-  const summariesState = useAsyncData(() => insightsApi.summaries(), []);
+  const insightsState = useAsyncData(loadInsightsData, []);
   const [selectedSummaryId, setSelectedSummaryId] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisMessage, setAnalysisMessage] = useState<string | null>(null);
+  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const selectedSummary = useMemo(() => {
     return (
-      summariesState.data?.find((summary) => summary.id === selectedSummaryId) ??
-      summariesState.data?.[0] ??
+      insightsState.data?.summaries.find((summary) => summary.id === selectedSummaryId) ??
+      insightsState.data?.summaries[0] ??
       null
     );
-  }, [selectedSummaryId, summariesState.data]);
+  }, [selectedSummaryId, insightsState.data]);
 
   const extractionRunId = firstString(summaryArray(selectedSummary, "extraction_run_ids"));
   const extractionState = useAsyncData(
@@ -22,29 +32,65 @@ export function InsightsPanel() {
     [extractionRunId]
   );
 
-  if (summariesState.isLoading && !summariesState.data) {
+  if (insightsState.isLoading && !insightsState.data) {
     return <LoadingState title="Loading insights" />;
   }
 
-  if (summariesState.error) {
+  if (insightsState.error) {
     return (
       <ErrorState
         title="Insights service unavailable"
-        description={`${summariesState.error}. Expected ${services.insightsBaseUrl}.`}
-        onAction={() => void summariesState.reload()}
+        description={`${insightsState.error}. Expected ${services.insightsBaseUrl}.`}
+        onAction={() => void insightsState.reload()}
       />
     );
   }
 
-  const summaries = summariesState.data ?? [];
+  const summaries = insightsState.data?.summaries ?? [];
+  const latestSucceededRun = latestCompletedRun(insightsState.data?.runs ?? []);
+
+  async function analyzeLatestRun() {
+    if (!latestSucceededRun) {
+      setAnalysisError("No succeeded visibility run is available for extraction.");
+      setAnalysisMessage(null);
+      return;
+    }
+    setIsAnalyzing(true);
+    setAnalysisError(null);
+    setAnalysisMessage(null);
+    try {
+      const result = await insightsApi.extractRunBatch(latestSucceededRun.id);
+      setSelectedSummaryId(result.summary.id);
+      setAnalysisMessage(
+        `${result.raw_response_count} raw responses analyzed for ${latestSucceededRun.id.slice(0, 8)}.`
+      );
+      await insightsState.reload();
+    } catch (caught) {
+      setAnalysisError(caught instanceof Error ? caught.message : "Extraction failed");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }
+
   if (summaries.length === 0) {
     return (
-      <EmptyState
-        title="No insights yet"
-        description="Run deterministic extraction from insights-service after raw responses exist."
-        actionLabel="Refresh"
-        onAction={() => void summariesState.reload()}
-      />
+      <section className="content-grid">
+        <div className="panel span-3 analysis-panel">
+          <div>
+            <p className="eyebrow">Deterministic extraction</p>
+            <h2>No insights yet</h2>
+            <p className="muted">
+              {latestSucceededRun
+                ? `Latest completed run ${latestSucceededRun.id.slice(0, 8)} is ready.`
+                : "No completed visibility run is ready."}
+            </p>
+          </div>
+          <button type="button" disabled={!latestSucceededRun || isAnalyzing} onClick={() => void analyzeLatestRun()}>
+            {isAnalyzing ? "Analyzing" : "Analyze latest run"}
+          </button>
+          {analysisError ? <p className="inline-error">{analysisError}</p> : null}
+        </div>
+      </section>
     );
   }
 
@@ -62,10 +108,21 @@ export function InsightsPanel() {
             <h2>Visibility summaries</h2>
             <p className="muted">{summaries.length} extraction summaries</p>
           </div>
-          <button type="button" onClick={() => void summariesState.reload()}>
-            Refresh
-          </button>
+          <div className="toolbar-controls">
+            <button
+              type="button"
+              disabled={!latestSucceededRun || isAnalyzing}
+              onClick={() => void analyzeLatestRun()}
+            >
+              {isAnalyzing ? "Analyzing" : "Analyze latest run"}
+            </button>
+            <button type="button" onClick={() => void insightsState.reload()}>
+              Refresh
+            </button>
+          </div>
         </div>
+        {analysisMessage ? <p className="inline-success">{analysisMessage}</p> : null}
+        {analysisError ? <p className="inline-error">{analysisError}</p> : null}
         <div className="summary-list">
           {summaries.map((summary) => (
             <button
@@ -127,6 +184,15 @@ function Metric({ label, value }: { label: string; value: number }) {
       <strong>{value}</strong>
     </div>
   );
+}
+
+async function loadInsightsData() {
+  const [summaries, runs] = await Promise.all([insightsApi.summaries(), visibilityApi.runs()]);
+  return { summaries, runs };
+}
+
+function latestCompletedRun(runs: RunBatch[]): RunBatch | null {
+  return runs.find((run) => run.status === "succeeded") ?? null;
 }
 
 function ExtractionDetail({ state }: { state: AsyncState<ExtractionRun | null> }) {

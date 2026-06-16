@@ -241,6 +241,20 @@ AI_VISIBILITY_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 metadata to use a specific local fake token value; it is optional and not needed
 for provider execution.
 
+## M9 UI Demo Polish
+
+The dashboard now opens with a live demo overview showing:
+
+- active Brandlight setup
+- latest run status
+- stored raw evidence count
+- extracted mention totals
+
+The Insights tab can trigger deterministic extraction for the latest succeeded
+visibility run with the existing insights-service API. The Visibility tab now
+shows raw response IDs, run item IDs, idempotency keys, request JSON, and
+response JSON for evidence review.
+
 ## Design Decisions
 
 Start with [docs/decisions/architecture.md](docs/decisions/architecture.md).

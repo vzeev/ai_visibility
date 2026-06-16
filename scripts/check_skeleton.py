@@ -44,6 +44,7 @@ REQUIRED_PATHS = [
     "apps/web/package.json",
     "apps/web/src/app/App.tsx",
     "apps/web/src/components/DataState.tsx",
+    "apps/web/src/features/overview/DemoOverview.tsx",
     "apps/web/src/lib/api.ts",
     "apps/web/src/lib/useAsyncData.ts",
     "apps/web/src/vite-env.d.ts",
@@ -68,6 +69,7 @@ REQUIRED_PATHS = [
     "openspec/changes/m6-insights-deterministic-extraction/specs/m6-insights-deterministic-extraction/spec.md",
     "openspec/changes/m7-ui-api-dashboard/specs/m7-ui-api-dashboard/spec.md",
     "openspec/changes/m8-docker-e2e-polish/specs/m8-docker-e2e-polish/spec.md",
+    "openspec/changes/m9-ui-demo-polish/specs/m9-ui-demo-polish/spec.md",
 ]
 
 REQUIRED_MARKERS = {
@@ -198,6 +200,7 @@ REQUIRED_MARKERS = {
         "Queue",
         "Visibility",
         "Insights",
+        "DemoOverview",
     ],
     "apps/web/src/lib/api.ts": [
         "VITE_CONFIG_SERVICE_URL",
@@ -206,10 +209,18 @@ REQUIRED_MARKERS = {
         "configApi",
         "visibilityApi",
         "insightsApi",
+        "extractRunBatch",
+    ],
+    "apps/web/src/features/overview/DemoOverview.tsx": [
+        "Demo brand",
+        "Raw evidence",
+        "Insights",
+        "visibilityApi.rawResponses",
     ],
     "apps/web/src/features/config/ConfigPanel.tsx": [
         "configApi",
         "Config service unavailable",
+        "Active setup",
     ],
     "apps/web/src/features/queue/QueuePanel.tsx": [
         "visibilityApi.createRun",
@@ -218,10 +229,12 @@ REQUIRED_MARKERS = {
     "apps/web/src/features/visibility/VisibilityPanel.tsx": [
         "visibilityApi.rawResponses",
         "Evidence detail",
+        "Idempotency key",
     ],
     "apps/web/src/features/insights/InsightsPanel.tsx": [
         "insightsApi.summaries",
         "Extraction evidence",
+        "Analyze latest run",
     ],
     "scripts/ai_visibility_tools/demo_e2e.py": [
         "seed_brandlight_demo",

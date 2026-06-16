@@ -38,4 +38,3 @@ The defaults should be configurable through environment variables and kept suita
 ## Verification
 
 The smoke flow should be covered by automated tests at the orchestration/helper layer, plus Docker-backed integration execution when Docker is available.
-

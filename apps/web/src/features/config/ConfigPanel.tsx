@@ -33,6 +33,10 @@ export function ConfigPanel() {
 
   const activeModels = data.models.filter((model) => model.enabled_for_visibility);
   const activePromptCount = data.prompts.length;
+  const demoBrand = data.brands.find((brand) => brand.name === "Brandlight") ?? data.brands[0];
+  const demoPromptSets = demoBrand
+    ? data.promptSets.filter((set) => set.brand_id === demoBrand.id)
+    : [];
 
   return (
     <section className="content-grid config-grid">
@@ -52,6 +56,26 @@ export function ConfigPanel() {
         <span>Rate policies</span>
         <strong>{data.rateLimits.length}</strong>
       </div>
+
+      {demoBrand ? (
+        <div className="panel span-3 demo-focus">
+          <div>
+            <p className="eyebrow">Active setup</p>
+            <h2>{demoBrand.name}</h2>
+            <p className="muted">{demoBrand.website_url ?? "No website configured"}</p>
+          </div>
+          <div className="readiness-strip" aria-label="Configuration readiness">
+            <ReadinessPill label="Prompt sets" value={demoPromptSets.length} ready={demoPromptSets.length > 0} />
+            <ReadinessPill label="Prompts" value={data.prompts.length} ready={data.prompts.length > 0} />
+            <ReadinessPill label="Models" value={activeModels.length} ready={activeModels.length > 0} />
+            <ReadinessPill
+              label="Credentials"
+              value={data.credentials.length}
+              ready={data.credentials.length > 0}
+            />
+          </div>
+        </div>
+      ) : null}
 
       <div className="panel span-2">
         <div className="panel-header">
@@ -147,6 +171,15 @@ export function ConfigPanel() {
         </div>
       </div>
     </section>
+  );
+}
+
+function ReadinessPill({ label, ready, value }: { label: string; ready: boolean; value: number }) {
+  return (
+    <span className={ready ? "readiness-pill ready" : "readiness-pill"}>
+      {label}
+      <strong>{value}</strong>
+    </span>
   );
 }
 

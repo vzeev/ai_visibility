@@ -36,4 +36,3 @@ Backend services SHALL allow local Vite browser origins to call API endpoints du
 - GIVEN the UI is served from `http://localhost:5173` or `http://127.0.0.1:5173`
 - WHEN the browser calls config, visibility, or insights APIs
 - THEN CORS settings permit the request under local demo defaults.
-
