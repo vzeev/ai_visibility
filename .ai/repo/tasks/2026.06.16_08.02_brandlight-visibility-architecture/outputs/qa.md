@@ -20,6 +20,11 @@ The contract is testable and bounded enough for a first implementation slice if 
 | Alembic owns schema | migration smoke test and contract/schema check |
 | Web skeleton works | `npm run build` and `npm run test` under `apps/web` |
 | No real OpenAI calls in tests | fake adapter tests and environment guard |
+| UI-configurable provider tokens are safe | credential redaction tests and no-plaintext-readback service tests |
+| Model rate limits are configurable | unit tests for provider/model policy resolution and throttling decisions |
+| Raw response writes are idempotent | duplicate-write and retry tests against unique idempotency keys |
+| AI provider calls are provider-neutral | adapter conformance tests against normalized request/result DTOs |
+| Prompts are config-owned records | prompt CRUD/versioning service tests |
 | Queue behavior later is reliable | unit tests for claim/idempotency/retry logic |
 
 ## Scorecard

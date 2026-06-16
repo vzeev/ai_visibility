@@ -1,0 +1,90 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ai_visibility}
+      POSTGRES_USER: ${POSTGRES_USER:-ai_visibility}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ai_visibility_local}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ai_visibility} -d ${POSTGRES_DB:-ai_visibility}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  config-service:
+    build:
+      context: .
+      dockerfile: infra/docker/python-service.Dockerfile
+    command: ["uvicorn", "apps.config_service.app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+    environment:
+      SERVICE_NAME: config-service
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ai_visibility:ai_visibility_local@postgres:5432/ai_visibility}
+    ports:
+      - "8001:8001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  visibility-service:
+    build:
+      context: .
+      dockerfile: infra/docker/python-service.Dockerfile
+    command: ["uvicorn", "apps.visibility_service.app.main:app", "--host", "0.0.0.0", "--port", "8002"]
+    environment:
+      SERVICE_NAME: visibility-service
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ai_visibility:ai_visibility_local@postgres:5432/ai_visibility}
+    ports:
+      - "8002:8002"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  insights-service:
+    build:
+      context: .
+      dockerfile: infra/docker/python-service.Dockerfile
+    command: ["uvicorn", "apps.insights_service.app.main:app", "--host", "0.0.0.0", "--port", "8003"]
+    environment:
+      SERVICE_NAME: insights-service
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ai_visibility:ai_visibility_local@postgres:5432/ai_visibility}
+    ports:
+      - "8003:8003"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  visibility-worker:
+    build:
+      context: .
+      dockerfile: infra/docker/python-service.Dockerfile
+    command: ["python", "-m", "apps.worker.app.main"]
+    environment:
+      SERVICE_NAME: visibility-worker
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ai_visibility:ai_visibility_local@postgres:5432/ai_visibility}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    image: node:24-alpine
+    working_dir: /app/apps/web
+    command: ["sh", "-c", "npm install && npm run dev -- --host 0.0.0.0"]
+    environment:
+      VITE_CONFIG_API_URL: http://localhost:8001
+      VITE_VISIBILITY_API_URL: http://localhost:8002
+      VITE_INSIGHTS_API_URL: http://localhost:8003
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+    depends_on:
+      - config-service
+      - visibility-service
+      - insights-service
+
+volumes:
+  postgres_data:

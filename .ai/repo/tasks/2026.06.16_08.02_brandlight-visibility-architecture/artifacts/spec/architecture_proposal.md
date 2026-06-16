@@ -311,7 +311,10 @@ Core behavior:
 - Workers claim jobs with a transaction and row locking.
 - Each item has `attempt_count`, `max_attempts`, `lease_expires_at`, `next_attempt_at`, `idempotency_key`, and `last_error`.
 - Stuck leased jobs become retryable after lease expiry.
-- A run item is idempotent by `(run_batch_id, prompt_snapshot_id, model_id)`.
+- A run item is idempotent by `(run_batch_id, prompt_version_id, provider_id, model_id, sample_index)`.
+- Before an adapter call, the worker reserves or checks the raw-response idempotency key.
+- After a successful adapter call, the worker writes the raw response in the same transaction that marks the item succeeded where practical.
+- Provider/model rate-limit policy controls when pending work is eligible to be claimed or executed.
 
 Alternatives:
 
@@ -340,6 +343,9 @@ Core config tables:
 - `config.prompt_sets`
 - `config.prompts`
 - `config.prompt_versions`
+- `config.providers`
+- `config.provider_credentials`
+- `config.rate_limit_policies`
 - `config.model_registry`
 - `config.schedules`
 
@@ -360,8 +366,11 @@ Core insights tables:
 Important invariants:
 
 - Raw responses are immutable after capture except for metadata corrections explicitly tracked by migration or repair scripts.
+- Raw response idempotency keys are unique.
 - Derived insight rows include `extraction_version`.
 - Run batches store a config snapshot reference or embedded snapshot JSON so historical results remain explainable.
+- Config snapshots include prompt versions, provider/model selection, credential reference, and rate-limit policy version.
+- Provider credentials are never exposed in normal read APIs after creation.
 - UI summaries never become the source of truth; they are read models over raw and derived records.
 
 ## 10. API Contracts
@@ -375,6 +384,12 @@ config-service
   POST   /api/v1/brands
   GET    /api/v1/prompts
   POST   /api/v1/prompts
+  POST   /api/v1/prompt-sets
+  POST   /api/v1/provider-credentials
+  PATCH  /api/v1/provider-credentials/{credential_id}
+  POST   /api/v1/provider-credentials/{credential_id}/test
+  GET    /api/v1/rate-limits
+  POST   /api/v1/rate-limits
   POST   /api/v1/models/sync
   GET    /api/v1/models
   PATCH  /api/v1/models/{model_id}
@@ -405,14 +420,14 @@ API responses should use concrete Pydantic DTOs. Open JSON is allowed only for e
 
 Primary flow:
 
-1. User configures a brand, competitors, prompt set, and enabled models in the Config tab.
+1. User configures provider API token, model rate limits, brand, competitors, prompt set, and enabled models in the Config tab.
 2. UI calls `config-service` to save configuration.
 3. User starts a visibility run.
 4. UI calls `visibility-service POST /api/v1/runs`.
-5. Visibility service reads config via `config-service`, creates a run batch, snapshots relevant config, and inserts run items.
-6. Visibility worker claims pending run items.
-7. Worker calls OpenAI Responses API through an adapter.
-8. Worker persists raw response JSON, output text, usage, status, latency, and errors.
+5. Visibility service reads config via `config-service`, creates a run batch, snapshots prompts, provider/model settings, rate limits, and credential references, then inserts run items.
+6. Visibility worker claims pending run items only when provider/model rate limits allow execution.
+7. Worker calls the configured provider through the common adapter interface.
+8. Worker persists raw response JSON, output text, usage, status, latency, errors, and idempotency key.
 9. Insights service or worker creates extraction jobs for new raw responses.
 10. Insights extraction combines deterministic matching with optional structured LLM extraction, then writes derived records.
 11. UI Queue tab shows progress; Visibility tab shows raw responses; Insights tab shows derived results and links back to raw evidence.
@@ -422,14 +437,16 @@ Primary flow:
 OpenAI API failures:
 
 - timeout: mark attempt failed, retry with exponential backoff
-- rate limit: retry after delay and reduce concurrency
+- rate limit: apply configured provider/model backoff, retry after delay, and reduce eligible concurrency
 - invalid model: disable model or mark registry entry as unavailable after repeated failures
 - API key missing: worker fails closed and surfaces configuration error
+- invalid API key: credential test fails or worker marks credential error without exposing token value
 
 Queue failures:
 
 - worker crash: lease expires and job becomes retryable
 - duplicate worker claim: row locking and idempotency key prevent duplicate persisted success
+- duplicate raw response write: unique idempotency key returns existing response or fails cleanly without corrupting state
 - permanent failure: item moves to `failed` after max attempts
 
 Data failures:
@@ -488,7 +505,8 @@ Rejected shortcut:
 
 Security baseline:
 
-- Store `OPENAI_API_KEY` only in environment variables or local `.env`, never in source.
+- API tokens are configurable from the UI, but treated as secrets: write-only, redacted on read, encrypted at rest or stored as secret references, and never included in raw payloads.
+- Local `.env` may provide fallback demo credentials, but UI-managed credentials are the product path.
 - Add `.env` to `.gitignore` before implementation.
 - Redact API keys and authorization headers from logs.
 - Limit request body size for API endpoints.
@@ -519,13 +537,14 @@ Phase 0: repo foundation after architecture approval
 Phase 1: config service
 
 - implement config schema, DTOs, API, migrations, tests
-- implement model registry sync contract with fake OpenAI tests
+- implement UI-configurable prompts, prompt versions, provider credentials, model registry, model enablement, and per-model rate limits
+- implement model registry sync contract with fake provider tests
 
 Phase 2: visibility queue and raw collection
 
-- implement run batches, run items, worker claim loop, fake adapter
-- add OpenAI adapter behind environment-gated runtime path
-- persist raw response evidence
+- implement run batches, run items, worker claim loop, raw-response idempotency, fake adapter, and rate-limit enforcement
+- add OpenAI adapter behind the common provider adapter interface
+- persist raw response evidence without credentials
 
 Phase 3: insights service
 
@@ -548,8 +567,13 @@ Phase 5: integration polish
 Unit tests:
 
 - prompt expansion and config validation
+- prompt version activation/deactivation behavior
+- provider credential redaction and secret-reference behavior
+- per-model rate-limit selection and throttling decisions
 - model registry filtering and enabled model selection
 - queue claim/idempotency logic
+- raw response idempotency key generation and duplicate handling
+- provider adapter contract conformance using fake and OpenAI-shaped fixtures
 - deterministic mention/citation extraction
 - DTO validation
 
@@ -574,6 +598,8 @@ Risks:
 
 - External API calls can make demos flaky; fake adapter and seeded demo data are mandatory.
 - OpenAI model availability changes; model registry must be dynamic.
+- UI-managed API tokens increase security risk; implementation must make token readback impossible and logs redacted.
+- Provider-neutral adapter abstraction can become leaky if normalized DTOs are too weak; contract tests should enforce adapter shape.
 - Three services may be more than needed for the first code slice; keep boundaries thin.
 - UI can become a debug console; product framing should keep evidence drilldown user-oriented.
 

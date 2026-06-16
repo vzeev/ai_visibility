@@ -82,10 +82,18 @@ repo and adds `ADR-007: Brandlight Website-Aligned UI`, recording the user
 decision that the demo UI should visually align with the official Brandlight
 website.
 
+Follow-up user concerns were added to the architecture package and durable ADRs:
+
+- raw visibility data idempotency
+- per-model/provider rate-limit configuration
+- provider-neutral AI adapter boundary
+- UI-managed API token configuration with write-only/redacted secret handling
+- UI-configurable prompts stored as versioned DB config
+
 ## Rich Handoff
 
-completed_work: Packaged architecture into approval-ready summary.
-key_decisions: Foundation-first implementation after approval; no OpenAI runtime calls in first slice; durable architecture decisions now live in `docs/decisions/architecture.md`.
+completed_work: Packaged architecture into approval-ready summary and updated follow-up concerns.
+key_decisions: Foundation-first implementation after approval; no OpenAI runtime calls in first slice; durable architecture decisions now live in `docs/decisions/architecture.md`; prompts, provider credentials, model rate limits, provider-neutral adapters, and raw idempotency are required architecture concerns.
 deviations_from_plan: None.
 open_concerns: Await user architecture approval and first-slice decision.
 important_findings: The demo should prove raw-to-derived lineage and queue observability.

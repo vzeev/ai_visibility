@@ -1,0 +1,1 @@
+"""Visibility service domain model."""

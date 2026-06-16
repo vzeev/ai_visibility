@@ -13,6 +13,8 @@ None at architecture stage.
 ## Hardening Requirements
 
 - Read `OPENAI_API_KEY` only from environment variables or a local secret mechanism.
+- If API tokens are configured through the UI, the UI/API must be write-only for secret values and return only redacted metadata after save.
+- UI-managed provider tokens must be encrypted at rest or stored outside the DB behind a secret-reference abstraction; plaintext token storage is not accepted.
 - Never log API keys, authorization headers, full environment dumps, or secret-bearing exception objects.
 - Add `.env` to `.gitignore` and provide `.env.example` only.
 - Treat raw model output as untrusted text in the UI; do not render it as HTML.
@@ -26,6 +28,7 @@ None at architecture stage.
 - Secret leakage through logs or committed files.
 - Cross-site scripting through raw model output.
 - Cost/rate-limit abuse if run creation is unbounded.
+- Secret disclosure through provider credential readback, browser state, logs, or raw response payloads.
 - Prompt/config payloads causing oversized requests or worker overload.
 - Confusion between raw untrusted output and trusted insight data.
 

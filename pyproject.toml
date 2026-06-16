@@ -1,0 +1,74 @@
+[tool.poetry]
+name = "ai-visibility"
+version = "0.1.0"
+description = "AI visibility interview demo foundation"
+authors = ["Vladimir Soskin"]
+readme = "README.md"
+packages = [{ include = "apps" }, { include = "scripts" }]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "0.135.1"
+uvicorn = { version = "0.42.0", extras = ["standard"] }
+sqlalchemy = "2.0.48"
+psycopg = { version = "^3.3.4", extras = ["binary"] }
+pydantic = "2.12.5"
+httpx = "0.28.1"
+alembic = "1.18.4"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "4.0.1"
+pytest = "^8.3.4"
+pytest-asyncio = "^0.24.0"
+ruff = "^0.14.9"
+pyright = "^1.1.407"
+bandit = "^1.9.2"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.bandit]
+targets = ["apps", "scripts", "alembic"]
+exclude_dirs = ["tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.pyright]
+typeCheckingMode = "strict"
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+include = ["apps", "tests", "scripts", "alembic"]
+exclude = ["**/__pycache__", ".venv", ".pytest_cache", ".ruff_cache"]
+reportMissingImports = true
+reportMissingTypeStubs = false
+
+[[tool.pyright.executionEnvironments]]
+root = "tests"
+reportPrivateUsage = false
+
+[tool.poetry.scripts]
+check-skeleton = "scripts.ai_visibility_tools.cli_tasks:main_check_skeleton"
+doctor = "scripts.ai_visibility_tools.cli_tasks:main_doctor"
+fix = "scripts.ai_visibility_tools.cli_tasks:main_fix"
+precommit = "scripts.ai_visibility_tools.cli_tasks:main_precommit"
+test-all = "scripts.ai_visibility_tools.cli_tasks:main_test_all"
+test-integration = "scripts.ai_visibility_tools.cli_tasks:main_test_integration"
+test-service = "scripts.ai_visibility_tools.cli_tasks:main_test_service"
+test-servcie = "scripts.ai_visibility_tools.cli_tasks:main_test_servcie"
+test-unit = "scripts.ai_visibility_tools.cli_tasks:main_test_unit"
+web-check = "scripts.ai_visibility_tools.cli_tasks:main_web_check"
+
+[build-system]
+requires = ["poetry-core>=1.9.0"]
+build-backend = "poetry.core.masonry.api"

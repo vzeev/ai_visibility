@@ -1,0 +1,49 @@
+exclude: ^\.ai/repo/tasks/
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-merge-conflict
+      - id: check-added-large-files
+        exclude: ^\.ai/knowledge/sources/[^/]+/artifacts/
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.9
+    hooks:
+      - id: ruff
+        args: ["--fix"]
+        language_version: python3.12
+      - id: ruff-format
+        language_version: python3.12
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.9.2
+    hooks:
+      - id: bandit
+        args: ["-c", "pyproject.toml", "-r", "apps", "scripts", "alembic"]
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.407
+    hooks:
+      - id: pyright
+        args: ["--project", "pyproject.toml"]
+  - repo: local
+    hooks:
+      - id: skeleton-check
+        name: skeleton check
+        entry: python scripts/check_skeleton.py
+        language: system
+        pass_filenames: false
+        files: '^(apps|contracts|alembic|scripts|tests|openspec|infra)/|^docker-compose(\.test)?\.yml$|^pyproject\.toml$|^poetry\.toml$|^README\.md$|^\.pre-commit-config\.yaml$'
+      - id: unittest-foundation
+        name: unittest foundation
+        entry: python -m unittest discover -s tests -p test_*.py
+        language: system
+        pass_filenames: false
+        files: '^(apps|tests|scripts|alembic)/.*\.py$|^pyproject\.toml$'
+      - id: web-typecheck
+        name: web typecheck
+        entry: python scripts/run_web_check.py
+        language: system
+        pass_filenames: false
+        files: '^apps/web/'

@@ -1,0 +1,364 @@
+openapi: 3.1.0
+info:
+  title: AI Visibility Demo API
+  version: 0.1.0
+  description: Contract-first API surface for config, visibility, and insights services.
+servers:
+  - url: http://localhost:8001
+    description: config-service
+  - url: http://localhost:8002
+    description: visibility-service
+  - url: http://localhost:8003
+    description: insights-service
+paths:
+  /healthz:
+    get:
+      operationId: healthz
+      responses:
+        "200":
+          description: Service health response.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /api/v1/brands:
+    get:
+      operationId: listBrands
+      responses:
+        "200":
+          description: Brand list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Brand"
+    post:
+      operationId: createBrand
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBrandRequest"
+      responses:
+        "201":
+          description: Created brand.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Brand"
+  /api/v1/prompts:
+    get:
+      operationId: listPrompts
+      responses:
+        "200":
+          description: Prompt list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Prompt"
+    post:
+      operationId: createPrompt
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePromptRequest"
+      responses:
+        "201":
+          description: Created prompt.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Prompt"
+  /api/v1/provider-credentials:
+    post:
+      operationId: createProviderCredential
+      description: Saves a provider token as a write-only secret and returns redacted metadata.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProviderCredentialRequest"
+      responses:
+        "201":
+          description: Redacted credential metadata.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderCredential"
+  /api/v1/rate-limits:
+    get:
+      operationId: listRateLimitPolicies
+      responses:
+        "200":
+          description: Rate limit policy list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RateLimitPolicy"
+    post:
+      operationId: createRateLimitPolicy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RateLimitPolicy"
+      responses:
+        "201":
+          description: Created rate limit policy.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RateLimitPolicy"
+  /api/v1/runs:
+    post:
+      operationId: createVisibilityRun
+      responses:
+        "202":
+          description: Visibility run accepted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunBatch"
+    get:
+      operationId: listVisibilityRuns
+      responses:
+        "200":
+          description: Visibility runs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/RunBatch"
+  /api/v1/queue:
+    get:
+      operationId: getQueueState
+      responses:
+        "200":
+          description: Queue state.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QueueState"
+  /api/v1/raw-responses:
+    get:
+      operationId: listRawResponses
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: Raw responses.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RawResponsePage"
+  /api/v1/summaries:
+    get:
+      operationId: listVisibilitySummaries
+      responses:
+        "200":
+          description: Visibility summaries.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VisibilitySummary"
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required: [service, status]
+      properties:
+        service:
+          type: string
+        status:
+          type: string
+          enum: [ok]
+    Brand:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        website_url:
+          type: string
+          nullable: true
+    CreateBrandRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        website_url:
+          type: string
+    Prompt:
+      type: object
+      required: [id, prompt_set_id, name, intent, active_version]
+      properties:
+        id:
+          type: string
+          format: uuid
+        prompt_set_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        intent:
+          type: string
+        active_version:
+          $ref: "#/components/schemas/PromptVersion"
+    PromptVersion:
+      type: object
+      required: [id, version, prompt_text]
+      properties:
+        id:
+          type: string
+          format: uuid
+        version:
+          type: integer
+        prompt_text:
+          type: string
+    CreatePromptRequest:
+      type: object
+      required: [prompt_set_id, name, intent, prompt_text]
+      properties:
+        prompt_set_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        intent:
+          type: string
+        prompt_text:
+          type: string
+    CreateProviderCredentialRequest:
+      type: object
+      required: [provider_id, label, token]
+      properties:
+        provider_id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        token:
+          type: string
+          writeOnly: true
+    ProviderCredential:
+      type: object
+      required: [id, provider_id, label, status, redacted_fingerprint]
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider_id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        status:
+          type: string
+          enum: [active, disabled, invalid]
+        redacted_fingerprint:
+          type: string
+        last_tested_at:
+          type: string
+          format: date-time
+          nullable: true
+    RateLimitPolicy:
+      type: object
+      required: [provider_id, max_concurrent_requests, requests_per_minute, min_delay_ms, max_retries, backoff_base_ms, backoff_max_ms]
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider_id:
+          type: string
+          format: uuid
+        model_id:
+          type: string
+          nullable: true
+        max_concurrent_requests:
+          type: integer
+        requests_per_minute:
+          type: integer
+        tokens_per_minute:
+          type: integer
+          nullable: true
+        min_delay_ms:
+          type: integer
+        max_retries:
+          type: integer
+        backoff_base_ms:
+          type: integer
+        backoff_max_ms:
+          type: integer
+    RunBatch:
+      type: object
+      required: [id, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+    QueueState:
+      type: object
+      required: [pending, running, succeeded, failed, throttled]
+      properties:
+        pending:
+          type: integer
+        running:
+          type: integer
+        succeeded:
+          type: integer
+        failed:
+          type: integer
+        throttled:
+          type: integer
+    RawResponsePage:
+      type: object
+      required: [items, total]
+      properties:
+        items:
+          type: array
+          items:
+            type: object
+        total:
+          type: integer
+    VisibilitySummary:
+      type: object
+      required: [id, summary_json]
+      properties:
+        id:
+          type: string
+          format: uuid
+        summary_json:
+          type: object
+          additionalProperties: true

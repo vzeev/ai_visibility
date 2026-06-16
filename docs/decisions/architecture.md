@@ -174,12 +174,83 @@ extraction versioning, and a link back to the raw response.
 Sources: adapted from Finfrax `ADR-006`; domain steward output for the
 Brandlight architecture task.
 
-## ADR-007: Brandlight Website-Aligned UI
+## ADR-007: Config-Owned Prompts, Provider Credentials, And Rate Limits
 
 Status: accepted.
 
-The demo UI should visually align with the public Brandlight website so the
-interview audience immediately recognizes the product context.
+Prompts to ask are configuration, not source-code constants. They are created,
+edited, enabled, disabled, versioned, and selected from the UI, then persisted in
+the config schema.
+
+Provider credentials are also part of configuration, but the secret value is a
+write-only secret. UI and API read operations may return credential metadata,
+status, label, provider, redacted fingerprint, and last-test state, but must not
+return the saved token value.
+
+Rate limits are configurable per provider and model. Provider defaults apply
+when a model has no override. The minimum rate-limit policy shape is:
+
+- max concurrent requests
+- requests per minute
+- tokens per minute
+- minimum delay between calls
+- max retries
+- backoff base and cap
+
+Visibility workers must consult these config records before executing model
+calls. Rate-limit behavior must be visible in queue state so throttled work is
+explainable in the UI.
+
+Sources: owner decision on 2026-06-16; architecture proposal follow-up.
+
+## ADR-008: Provider-Neutral AI Adapter Boundary
+
+Status: accepted.
+
+Any AI API must be wrapped behind the same internal adapter contract. Scheduling,
+queue, idempotency, raw persistence, and insight-triggering logic must not depend
+on provider-specific SDKs, API URLs, response shapes, or model quirks.
+
+Provider implementations map their native API into normalized internal request
+and result DTOs. OpenAI is the first provider, but it is not allowed to leak
+OpenAI-specific assumptions into the common visibility execution path.
+
+The common adapter result must include normalized status, output text, raw
+response payload, usage metadata, latency, provider response id when available,
+and normalized error details.
+
+Sources: owner decision on 2026-06-16; architecture proposal follow-up.
+
+## ADR-009: Raw Visibility Data Idempotency
+
+Status: accepted.
+
+Raw visibility data must be idempotent. A retry, worker restart, duplicate queue
+claim, or repeated API response write must not create conflicting successful raw
+records for the same intended measurement.
+
+The raw-response idempotency key is derived from:
+
+- run batch
+- prompt version
+- provider
+- model
+- config snapshot
+- sample index when repeated sampling is explicitly supported
+
+The database contract must enforce uniqueness for this key. Duplicate successful
+writes should return the existing raw response or fail cleanly without corrupting
+run state.
+
+Sources: owner decision on 2026-06-16; architecture proposal follow-up.
+
+## ADR-010: Brandlight Website-Aligned UI
+
+Status: accepted.
+
+The demo UI should visually align with the official public Brandlight website,
+`https://www.brandlight.ai/`, so the interview audience immediately recognizes
+the product context.
 
 The UI should mimic the public site's enterprise AI-visibility product language:
 
@@ -189,6 +260,9 @@ The UI should mimic the public site's enterprise AI-visibility product language:
   evidence tables
 - language around AI visibility, engines, citations, intent, competitors,
   technical health, and enterprise command-center workflows
+- visible product-module language aligned to the official site, including
+  Visibility & Insights, Technical Health, Content, Partnerships, Agentic
+  Commerce, and Ads
 - clear drilldown from high-level scores to raw prompts, model answers,
   citations, and extracted evidence
 
@@ -209,8 +283,9 @@ Implementation implications:
   competitor comparison, prompt intent, citation sources, queue status, and raw
   evidence.
 
-Sources: owner decision on 2026-06-16; public Brandlight homepage reviewed on
-2026-06-16; Brandlight architecture task artifacts.
+Sources: owner decision on 2026-06-16; official Brandlight homepage
+`https://www.brandlight.ai/` reviewed on 2026-06-16; Brandlight architecture
+task artifacts.
 
 ## Deferred Decisions
 
@@ -222,4 +297,6 @@ These are intentionally not finalized yet:
   or deferred to hardening.
 - The exact OpenAI model capability-filtering rules for enabled visibility
   models.
+- Whether UI-managed token secret material is encrypted in Postgres for the
+  local demo or stored outside the DB behind a secret-reference abstraction.
 - The production deployment target and CI provider.

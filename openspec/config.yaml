@@ -1,0 +1,14 @@
+schema: spec-driven
+
+context: |
+  AI Visibility Demo uses Python/FastAPI services, Poetry, Postgres, Alembic,
+  Docker Compose, and React/Vite. The system preserves raw AI responses as
+  immutable evidence, stores prompts and provider settings as config, and derives
+  insights through versioned extraction.
+
+rules:
+  proposal:
+    - Include non-goals.
+    - Link to docs/decisions/architecture.md when architecture decisions apply.
+  tasks:
+    - Keep tasks grouped by contract, backend, frontend, infra, and verification.

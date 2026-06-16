@@ -27,6 +27,7 @@ The requested service shape is coherent for demonstrating architecture and deliv
 - Initialize root Poetry project and local Python tooling.
 - Create Docker Compose baseline with Postgres and migration container.
 - Create Alembic skeleton and initial migration for foundational schemas.
+- Include foundational config schema for prompts, prompt versions, providers, provider credential metadata, model registry, rate-limit policies, run item idempotency, and raw response idempotency keys.
 - Create Python package skeletons for:
   - `apps/config_service`
   - `apps/visibility_service`
@@ -41,6 +42,7 @@ The requested service shape is coherent for demonstrating architecture and deliv
 
 - No OpenAI runtime calls in the first foundation slice.
 - No real queue worker behavior unless explicitly included by user after approval.
+- No plaintext API token readback from any UI/API endpoint.
 - No production auth/RBAC.
 - No Redis/Celery unless user chooses that over Postgres queue.
 - No full UI workflow beyond skeleton unless user expands the slice.
@@ -57,6 +59,11 @@ The requested service shape is coherent for demonstrating architecture and deliv
 6. OpenSpec active change documents the foundation behavior and task list.
 7. Contracts declare the initial API/schema/enums before service code depends on them.
 8. `.env.example` documents required local environment variables without secrets.
+9. Contracts include UI-configurable prompts and prompt versions as config-owned database records.
+10. Contracts include provider credential metadata with write-only secret semantics and redacted read responses.
+11. Contracts include per-model/provider rate-limit configuration.
+12. Contracts include raw response idempotency keys and uniqueness rules.
+13. Contracts define a provider-neutral AI adapter boundary for implementation.
 
 ## Verification Method
 
@@ -74,6 +81,7 @@ The requested service shape is coherent for demonstrating architecture and deliv
 - User decision on whether first implementation slice is skeleton-only or includes config API behavior.
 - Local Poetry, Docker, Node/npm availability.
 - OpenAI API key is not required for this slice.
+- If UI-managed token storage is included in the first slice, the approved storage approach must be either encrypted-at-rest secret storage or a local secret-reference abstraction; plaintext DB storage is not accepted.
 
 ## Risks And Likely Failure Modes
 
@@ -81,6 +89,8 @@ The requested service shape is coherent for demonstrating architecture and deliv
 - Contracts drifting behind code if implementation begins before contract files are written.
 - Docker Compose startup failures from premature healthcheck complexity.
 - Frontend tooling drift if web dependencies are not pinned enough for repeatable builds.
+- Secret-management shortcuts could leak API tokens if UI-managed credentials are implemented without write-only/redacted read behavior.
+- Provider adapter abstractions can become provider-specific unless contract tests enforce normalized request/result DTOs.
 
 ## Evidence Ledger
 
@@ -91,6 +101,10 @@ The requested service shape is coherent for demonstrating architecture and deliv
 | OpenAI models should be dynamically discovered rather than hard-coded. | external_fact | OpenAI `/v1/models` OpenAPI spec | verified |
 | Responses API is appropriate for model response capture. | external_fact | OpenAI `/v1/responses` OpenAPI spec | verified |
 | Structured Outputs can support schema-constrained extraction where supported. | external_fact | OpenAI structured outputs guide | verified |
+| API tokens should be configurable from the UI. | user_instruction | current user request | accepted with security constraints |
+| Rate limits should be configurable per model. | user_instruction | current user request | accepted |
+| AI provider calling logic should be provider/model independent. | user_instruction | current user request | accepted |
+| Prompts should be UI-configurable and stored in DB as config. | user_instruction | current user request | accepted |
 
 ## Open Questions Or Assumptions
 
@@ -98,6 +112,7 @@ The requested service shape is coherent for demonstrating architecture and deliv
 - Question: should the first slice include a working config API after skeleton setup?
 - Question: should the MVP include Redis/Celery or stay with Postgres queue?
 - Question: should auth/RBAC be explicitly excluded until after the interview demo works?
+- Question: should UI-managed API token secret material be stored encrypted in Postgres for the local demo, or should the DB store a secret reference while the actual token stays in an environment/local secret file?
 
 ## Approval Status And Version History
 
@@ -108,7 +123,11 @@ The requested service shape is coherent for demonstrating architecture and deliv
 ## Invariant Summary
 
 - Config is source of truth for planned runs.
+- Prompts are config-owned, versioned DB records.
+- Provider/model rate limits are config-owned records.
+- AI provider execution goes through a normalized adapter contract.
 - Raw visibility responses are immutable evidence.
+- Raw visibility responses are idempotent by deterministic run/prompt/provider/model/sample key.
 - Insights are derived, versioned, and recomputable.
 - UI summaries must link back to raw evidence.
 
@@ -119,6 +138,7 @@ The requested service shape is coherent for demonstrating architecture and deliv
 - `insights-service`: derived extraction and summary truth.
 - `worker`: execution mechanism, not domain truth owner.
 - `web`: presentation and workflow surface, not truth owner.
+- `apps/shared` provider adapter DTOs: cross-provider execution contract, not provider-specific business logic.
 
 ## Truth-Boundary Description
 

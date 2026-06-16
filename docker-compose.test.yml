@@ -1,0 +1,14 @@
+services:
+  postgres-test:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ai_visibility_test
+      POSTGRES_USER: ai_visibility
+      POSTGRES_PASSWORD: ai_visibility_local
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ai_visibility -d ai_visibility_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
