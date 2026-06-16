@@ -90,6 +90,24 @@ class ConfigModelRegistry(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class ConfigRateLimitPolicy(Base):
+    __tablename__ = "rate_limit_policies"
+    __table_args__ = {"schema": "config"}
+
+    id: Mapped[UUID] = mapped_column(primary_key=True)
+    provider_id: Mapped[UUID] = mapped_column(nullable=False)
+    model_id: Mapped[str | None] = mapped_column(Text)
+    max_concurrent_requests: Mapped[int] = mapped_column(Integer, nullable=False)
+    requests_per_minute: Mapped[int] = mapped_column(Integer, nullable=False)
+    tokens_per_minute: Mapped[int | None] = mapped_column(Integer)
+    min_delay_ms: Mapped[int] = mapped_column(Integer, nullable=False)
+    max_retries: Mapped[int] = mapped_column(Integer, nullable=False)
+    backoff_base_ms: Mapped[int] = mapped_column(Integer, nullable=False)
+    backoff_max_ms: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class RunBatch(Base):
     __tablename__ = "run_batches"
     __table_args__ = {"schema": "visibility"}

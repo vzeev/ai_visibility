@@ -129,6 +129,29 @@ Run the worker locally with:
 poetry run python -m apps.worker.app.main
 ```
 
+## M5 OpenAI Runtime Readiness
+
+Real OpenAI execution is now available behind the same provider-neutral adapter
+interface used by the fake provider:
+
+- `OpenAIResponsesAdapter` maps `AIRequest` to `POST /v1/responses` and
+  normalizes response IDs, output text, usage, latency, and raw JSON into
+  `AIResponse`.
+- Runtime tokens are resolved through `EnvironmentCredentialResolver`; missing
+  tokens fail closed as retryable provider errors.
+- Raw request JSON never includes authorization headers or token values.
+- Worker execution checks the configured provider/model rate-limit policy from
+  the run snapshot before calling the adapter.
+- Automated tests use fake credentials and stubbed HTTP transports only.
+
+Real OpenAI execution is opt-in:
+
+```bash
+$env:AI_VISIBILITY_ENABLE_OPENAI="true"
+$env:AI_VISIBILITY_OPENAI_API_KEY="..."
+poetry run python -m apps.worker.app.main
+```
+
 ## Design Decisions
 
 Start with [docs/decisions/architecture.md](docs/decisions/architecture.md).

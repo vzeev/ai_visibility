@@ -29,7 +29,9 @@ REQUIRED_PATHS = [
     "apps/visibility_service/app/db/repository.py",
     "apps/visibility_service/app/db/session.py",
     "apps/shared/ai/provider.py",
+    "apps/shared/ai/credentials.py",
     "apps/shared/ai/idempotency.py",
+    "apps/shared/ai/openai_provider.py",
     "apps/shared/ai/rate_limits.py",
     "apps/shared/ai/secrets.py",
     "apps/worker/app/visibility_worker.py",
@@ -42,9 +44,11 @@ REQUIRED_PATHS = [
     "tests/integration/test_config_service_postgres.py",
     "tests/integration/test_visibility_service_postgres.py",
     "tests/integration/test_visibility_worker_postgres.py",
+    "tests/unit/test_openai_provider_adapter.py",
     "openspec/changes/m2-db-backed-config-service/specs/m2-db-backed-config-service/spec.md",
     "openspec/changes/m3-visibility-queue-raw-persistence/specs/m3-visibility-queue-raw-persistence/spec.md",
     "openspec/changes/m4-visibility-worker-fake-provider/specs/m4-visibility-worker-fake-provider/spec.md",
+    "openspec/changes/m5-openai-runtime-readiness/specs/m5-openai-runtime-readiness/spec.md",
 ]
 
 REQUIRED_MARKERS = {
@@ -104,14 +108,33 @@ REQUIRED_MARKERS = {
         "class AIProviderAdapter",
         "class FakeAIProviderAdapter",
     ],
+    "apps/shared/ai/credentials.py": [
+        "class EnvironmentCredentialResolver",
+        "class StaticCredentialResolver",
+        "MissingProviderCredentialError",
+    ],
+    "apps/shared/ai/openai_provider.py": [
+        "class OpenAIResponsesAdapter",
+        "OPENAI_RESPONSES_ENDPOINT",
+        "store",
+        "Authorization",
+        "AIProviderError",
+    ],
     "apps/shared/ai/idempotency.py": [
         "build_run_item_idempotency_key",
         "build_raw_response_idempotency_key",
+    ],
+    "apps/shared/ai/rate_limits.py": [
+        "class RateLimitPolicy",
+        "class InMemoryRateLimitGate",
+        "rate_limit_policy_from_mapping",
     ],
     "apps/worker/app/visibility_worker.py": [
         "class VisibilityWorker",
         "process_one",
         "process_batch",
+        "OpenAIResponsesAdapter",
+        "rate_limit_policy_from_mapping",
         "FakeAIProviderAdapter",
         "record_raw_response",
         "record_model_error",

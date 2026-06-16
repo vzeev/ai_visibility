@@ -155,7 +155,7 @@ class VisibilityRepository:
         model_error = models.ModelError(
             run_item_id=item.id,
             provider_id=item.provider_id,
-            model_id=metadata["model_id"],
+            model_id=str(metadata["model_id"]),
             error_type=error_type,
             error_message=error_message,
             retryable=retryable,
@@ -199,7 +199,7 @@ class VisibilityRepository:
             provider_id=item.provider_id,
             model_id=response.model_id,
             provider_response_id=response.provider_response_id,
-            prompt_text=metadata["prompt_text"],
+            prompt_text=str(metadata["prompt_text"]),
             output_text=response.output_text,
             raw_request_json=dict(response.raw_request_json),
             raw_response_json=raw_response_json,
@@ -229,17 +229,24 @@ class VisibilityRepository:
 
     def build_ai_request(self, item: models.RunItem) -> AIRequest:
         metadata = self._item_metadata(item)
+        request_metadata: dict[str, object] = {
+            "run_batch_id": str(item.run_batch_id),
+            "run_item_id": str(item.id),
+            "sample_index": item.sample_index,
+            "idempotency_key": item.idempotency_key,
+            "attempt_count": item.attempt_count,
+        }
+        rate_limit_policy = metadata.get("rate_limit_policy")
+        if isinstance(rate_limit_policy, Mapping):
+            rate_limit_mapping = cast(Mapping[object, object], rate_limit_policy)
+            request_metadata["rate_limit_policy"] = {
+                str(key): value for key, value in rate_limit_mapping.items()
+            }
         return AIRequest(
-            provider_key=metadata["provider_key"],
-            model_id=metadata["model_id"],
-            prompt_text=metadata["prompt_text"],
-            metadata={
-                "run_batch_id": str(item.run_batch_id),
-                "run_item_id": str(item.id),
-                "sample_index": item.sample_index,
-                "idempotency_key": item.idempotency_key,
-                "attempt_count": item.attempt_count,
-            },
+            provider_key=str(metadata["provider_key"]),
+            model_id=str(metadata["model_id"]),
+            prompt_text=str(metadata["prompt_text"]),
+            metadata=request_metadata,
         )
 
     def list_raw_responses(self, *, q: str | None, limit: int, offset: int) -> RawResponsePage:
@@ -344,16 +351,52 @@ class VisibilityRepository:
                     "display_name": model.display_name,
                     "owned_by": model.owned_by,
                     "capability_json": model.capability_json,
+                    "rate_limit_policy": self._rate_limit_record(model),
                 }
             )
         return records
 
-    def _item_metadata(self, item: models.RunItem) -> dict[str, str]:
+    def _rate_limit_record(
+        self,
+        model: models.ConfigModelRegistry,
+    ) -> dict[str, object] | None:
+        policy = None
+        if model.rate_limit_policy_id is not None:
+            policy = self._session.get(models.ConfigRateLimitPolicy, model.rate_limit_policy_id)
+        if policy is None:
+            policy = self._session.scalar(
+                select(models.ConfigRateLimitPolicy)
+                .where(models.ConfigRateLimitPolicy.provider_id == model.provider_id)
+                .where(models.ConfigRateLimitPolicy.model_id == model.model_id)
+            )
+        if policy is None:
+            policy = self._session.scalar(
+                select(models.ConfigRateLimitPolicy)
+                .where(models.ConfigRateLimitPolicy.provider_id == model.provider_id)
+                .where(models.ConfigRateLimitPolicy.model_id.is_(None))
+            )
+        if policy is None:
+            return None
+        return {
+            "id": str(policy.id),
+            "provider_id": str(policy.provider_id),
+            "model_id": policy.model_id,
+            "max_concurrent_requests": policy.max_concurrent_requests,
+            "requests_per_minute": policy.requests_per_minute,
+            "tokens_per_minute": policy.tokens_per_minute,
+            "min_delay_ms": policy.min_delay_ms,
+            "max_retries": policy.max_retries,
+            "backoff_base_ms": policy.backoff_base_ms,
+            "backoff_max_ms": policy.backoff_max_ms,
+        }
+
+    def _item_metadata(self, item: models.RunItem) -> dict[str, object]:
         batch = self._require_batch(item.run_batch_id)
         snapshot = batch.config_snapshot_json
         prompt_text = ""
         model_id = ""
         provider_key = ""
+        rate_limit_policy: dict[str, object] | None = None
         for prompt in _snapshot_list(snapshot, "prompts"):
             if str(prompt["prompt_version_id"]) == str(item.prompt_version_id):
                 prompt_text = str(prompt["prompt_text"])
@@ -362,10 +405,18 @@ class VisibilityRepository:
             if str(model["model_registry_id"]) == str(item.model_registry_id):
                 model_id = str(model["model_id"])
                 provider_key = str(model["provider_key"])
+                policy = model.get("rate_limit_policy")
+                if isinstance(policy, dict):
+                    rate_limit_policy = cast(dict[str, object], policy)
                 break
         if not prompt_text or not model_id or not provider_key:
             raise NotFoundError("run item metadata missing from config snapshot")
-        return {"prompt_text": prompt_text, "model_id": model_id, "provider_key": provider_key}
+        return {
+            "prompt_text": prompt_text,
+            "model_id": model_id,
+            "provider_key": provider_key,
+            "rate_limit_policy": rate_limit_policy,
+        }
 
     def _refresh_batch_status(self, run_batch_id: UUID) -> None:
         batch = self._require_batch(run_batch_id)

@@ -8,7 +8,7 @@ from apps.worker.app.visibility_worker import VisibilityWorker
 
 
 async def run_worker() -> None:
-    worker = VisibilityWorker(get_session_factory())
+    worker = _worker_from_env()
     results = await worker.process_batch(max_items=_max_items_from_env())
     processed = sum(1 for result in results if result.status == "processed")
     failed = sum(1 for result in results if result.status == "failed")
@@ -22,6 +22,12 @@ def main() -> None:
 
 def _max_items_from_env() -> int:
     return max(1, int(os.environ.get("WORKER_MAX_ITEMS", "10")))
+
+
+def _worker_from_env() -> VisibilityWorker:
+    if os.environ.get("AI_VISIBILITY_ENABLE_OPENAI", "").lower() in {"1", "true", "yes"}:
+        return VisibilityWorker.with_openai_enabled(get_session_factory())
+    return VisibilityWorker(get_session_factory())
 
 
 if __name__ == "__main__":

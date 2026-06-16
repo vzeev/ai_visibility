@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from apps.shared.ai.provider import AIProviderError, AIRequest, AIResponse, FakeAIProviderAdapter
+from apps.shared.ai.rate_limits import RateLimitDecision, RateLimitPolicy
 from apps.visibility_service.app.db import models
 from apps.visibility_service.app.db.repository import VisibilityRepository
 from apps.worker.app.visibility_worker import VisibilityWorker
@@ -84,6 +85,31 @@ class VisibilityWorkerTests(unittest.TestCase):
         self.assertEqual(0, len(raw_responses))
         self.assertEqual(1, queue["pending"])
 
+    def test_rate_limit_gate_throttles_from_configured_policy(self) -> None:
+        self._attach_rate_limit(min_delay_ms=5_000)
+        self._create_run(sample_count=1, max_attempts=2)
+        gate = DenyRateLimitGate()
+        worker = VisibilityWorker(self.session_factory, rate_limit_gate=gate)
+
+        result = asyncio.run(worker.process_one())
+
+        self.assertEqual("failed", result.status)
+        self.assertEqual(
+            "provider/model rate limit is not currently eligible", result.error_message
+        )
+        self.assertIsNotNone(gate.checked_policy)
+        assert gate.checked_policy is not None
+        self.assertEqual(5_000, gate.checked_policy.min_delay_ms)
+        self.assertFalse(gate.recorded_execution)
+        with self.session_factory() as session:
+            errors = list(session.scalars(select(models.ModelError)))
+            raw_responses = list(session.scalars(select(models.RawResponse)))
+            queue = VisibilityRepository(session).queue_state()
+        self.assertEqual(1, len(errors))
+        self.assertEqual("rate_limit", errors[0].error_type)
+        self.assertEqual(0, len(raw_responses))
+        self.assertEqual(1, queue["throttled"])
+
     def _create_run(self, *, sample_count: int, max_attempts: int) -> None:
         with self.session_factory() as session:
             VisibilityRepository(session).create_run(
@@ -92,6 +118,31 @@ class VisibilityWorkerTests(unittest.TestCase):
                 sample_count=sample_count,
                 max_attempts=max_attempts,
             )
+
+    def _attach_rate_limit(self, *, min_delay_ms: int) -> None:
+        policy_id = uuid4()
+        now = datetime.now(UTC)
+        with self.session_factory() as session:
+            session.add(
+                models.ConfigRateLimitPolicy(
+                    id=policy_id,
+                    provider_id=self.config_ids["provider_id"],
+                    model_id="gpt-test",
+                    max_concurrent_requests=1,
+                    requests_per_minute=20,
+                    tokens_per_minute=None,
+                    min_delay_ms=min_delay_ms,
+                    max_retries=2,
+                    backoff_base_ms=100,
+                    backoff_max_ms=1_000,
+                    created_at=now,
+                    updated_at=now,
+                )
+            )
+            model = session.get(models.ConfigModelRegistry, self.config_ids["model_registry_id"])
+            assert model is not None
+            model.rate_limit_policy_id = policy_id
+            session.commit()
 
 
 class RetryableFailingAdapter:
@@ -104,6 +155,31 @@ class RetryableFailingAdapter:
             message="rate limited",
             retryable=True,
         )
+
+
+class DenyRateLimitGate:
+    def __init__(self) -> None:
+        self.checked_policy: RateLimitPolicy | None = None
+        self.recorded_execution = False
+
+    def check(
+        self,
+        *,
+        provider_key: str,
+        model_id: str,
+        policy: RateLimitPolicy,
+    ) -> RateLimitDecision:
+        self.checked_policy = policy
+        return RateLimitDecision(allowed=False, retry_after_seconds=7)
+
+    def record_execution(
+        self,
+        *,
+        provider_key: str,
+        model_id: str,
+        policy: RateLimitPolicy,
+    ) -> None:
+        self.recorded_execution = True
 
 
 def _seed_config(session_factory: sessionmaker[Session]) -> dict[str, Any]:
