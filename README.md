@@ -171,6 +171,34 @@ evidence-linked derived records:
 M6 is deterministic only: no LLM extraction, no scheduler, and no React UI work.
 Raw visibility rows remain immutable inputs.
 
+## M7 UI API Dashboard
+
+The React/Vite dashboard is now API-backed instead of static:
+
+- Config tab reads brands, prompt sets, prompts, providers, credentials, rate
+  limits, and models from config-service.
+- Queue tab reads queue counts and run batches from visibility-service and can
+  create a run from selected brand/prompt set.
+- Visibility tab reads raw responses with search, pagination, and detail view.
+- Insights tab reads summaries and extraction-run evidence from insights-service.
+- Every tab includes loading, empty, error, and refresh states for local service
+  development.
+
+Web service URLs can be overridden with Vite variables:
+
+```bash
+VITE_CONFIG_SERVICE_URL=http://localhost:8001
+VITE_VISIBILITY_SERVICE_URL=http://localhost:8002
+VITE_INSIGHTS_SERVICE_URL=http://localhost:8003
+```
+
+Run the dashboard locally:
+
+```bash
+cd apps/web
+npm run dev -- --host 127.0.0.1
+```
+
 ## Design Decisions
 
 Start with [docs/decisions/architecture.md](docs/decisions/architecture.md).

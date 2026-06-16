@@ -1,0 +1,29 @@
+git status --porcelain=v1 -uall after M7 implementation and closure sync:
+ M .env.example
+ M README.md
+ M apps/web/src/features/config/ConfigPanel.tsx
+ M apps/web/src/features/insights/InsightsPanel.tsx
+ M apps/web/src/features/queue/QueuePanel.tsx
+ M apps/web/src/features/visibility/VisibilityPanel.tsx
+ M apps/web/src/styles/global.css
+ M scripts/check_skeleton.py
+?? .ai/repo/tasks/2026.06.16_18.52_m7-ui-api-dashboard/artifacts/contracts/implementation_contract.v1.md
+?? .ai/repo/tasks/2026.06.16_18.52_m7-ui-api-dashboard/artifacts/guards/manager_after.txt
+?? .ai/repo/tasks/2026.06.16_18.52_m7-ui-api-dashboard/artifacts/guards/manager_before.txt
+?? .ai/repo/tasks/2026.06.16_18.52_m7-ui-api-dashboard/outputs/architect.md
+?? .ai/repo/tasks/2026.06.16_18.52_m7-ui-api-dashboard/outputs/code_simplifier.md
+?? .ai/repo/tasks/2026.06.16_18.52_m7-ui-api-dashboard/outputs/developer.md
+?? .ai/repo/tasks/2026.06.16_18.52_m7-ui-api-dashboard/outputs/product_owner.md
+?? .ai/repo/tasks/2026.06.16_18.52_m7-ui-api-dashboard/outputs/qa.md
+?? .ai/repo/tasks/2026.06.16_18.52_m7-ui-api-dashboard/outputs/reviewer.md
+?? .ai/repo/tasks/2026.06.16_18.52_m7-ui-api-dashboard/outputs/security.md
+?? .ai/repo/tasks/2026.06.16_18.52_m7-ui-api-dashboard/outputs/technical_writer.md
+?? .ai/repo/tasks/2026.06.16_18.52_m7-ui-api-dashboard/progress.md
+?? apps/web/src/components/DataState.tsx
+?? apps/web/src/lib/api.ts
+?? apps/web/src/lib/useAsyncData.ts
+?? apps/web/src/vite-env.d.ts
+?? openspec/changes/m7-ui-api-dashboard/design.md
+?? openspec/changes/m7-ui-api-dashboard/proposal.md
+?? openspec/changes/m7-ui-api-dashboard/specs/m7-ui-api-dashboard/spec.md
+?? openspec/changes/m7-ui-api-dashboard/tasks.md

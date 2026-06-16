@@ -41,6 +41,10 @@ REQUIRED_PATHS = [
     "apps/worker/app/visibility_worker.py",
     "apps/web/package.json",
     "apps/web/src/app/App.tsx",
+    "apps/web/src/components/DataState.tsx",
+    "apps/web/src/lib/api.ts",
+    "apps/web/src/lib/useAsyncData.ts",
+    "apps/web/src/vite-env.d.ts",
     "scripts/run_web_check.py",
     "tests/services/test_config_service_api.py",
     "tests/services/test_visibility_service_api.py",
@@ -172,6 +176,30 @@ REQUIRED_MARKERS = {
         "Queue",
         "Visibility",
         "Insights",
+    ],
+    "apps/web/src/lib/api.ts": [
+        "VITE_CONFIG_SERVICE_URL",
+        "VITE_VISIBILITY_SERVICE_URL",
+        "VITE_INSIGHTS_SERVICE_URL",
+        "configApi",
+        "visibilityApi",
+        "insightsApi",
+    ],
+    "apps/web/src/features/config/ConfigPanel.tsx": [
+        "configApi",
+        "Config service unavailable",
+    ],
+    "apps/web/src/features/queue/QueuePanel.tsx": [
+        "visibilityApi.createRun",
+        "Create visibility run",
+    ],
+    "apps/web/src/features/visibility/VisibilityPanel.tsx": [
+        "visibilityApi.rawResponses",
+        "Evidence detail",
+    ],
+    "apps/web/src/features/insights/InsightsPanel.tsx": [
+        "insightsApi.summaries",
+        "Extraction evidence",
     ],
 }
 
