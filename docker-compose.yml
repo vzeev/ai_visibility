@@ -1,92 +1,101 @@
+x-python-build: &python-build
+  context: ${DOCKER_BUILD_CONTEXT}
+  dockerfile: ${PYTHON_SERVICE_DOCKERFILE}
+
+x-mounted-repo-env: &mounted-repo-env
+  type: bind
+  source: ${REPO_ENV_FILE}
+  target: ${CONTAINER_ENV_FILE}
+  read_only: true
+
+x-docker-database-url: &docker-database-url postgresql+psycopg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_DOCKER_HOST}:${POSTGRES_DOCKER_PORT}/${POSTGRES_DB}
+
 services:
   postgres:
-    image: postgres:17-alpine
+    image: ${POSTGRES_IMAGE}
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-ai_visibility}
-      POSTGRES_USER: ${POSTGRES_USER:-ai_visibility}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ai_visibility_local}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:${POSTGRES_DOCKER_PORT}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ai_visibility} -d ${POSTGRES_DB:-ai_visibility}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB} -p $${POSTGRES_DOCKER_PORT}"]
       interval: 5s
       timeout: 5s
       retries: 20
 
   config-service:
-    build:
-      context: .
-      dockerfile: infra/docker/python-service.Dockerfile
-    command: ["uvicorn", "apps.config_service.app.main:app", "--host", "0.0.0.0", "--port", "8001"]
+    build: *python-build
+    command: ["uvicorn", "apps.config_service.app.main:app", "--host", "${SERVICE_BIND_HOST}", "--port", "${CONFIG_SERVICE_PORT}"]
     environment:
-      SERVICE_NAME: config-service
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ai_visibility}:${POSTGRES_PASSWORD:-ai_visibility_local}@postgres:5432/${POSTGRES_DB:-ai_visibility}
-      AI_VISIBILITY_CORS_ORIGINS: ${AI_VISIBILITY_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      SERVICE_NAME: ${CONFIG_SERVICE_NAME}
+      DATABASE_URL: *docker-database-url
+      AI_VISIBILITY_CORS_ORIGINS: ${AI_VISIBILITY_CORS_ORIGINS}
     ports:
-      - "8001:8001"
+      - "${CONFIG_SERVICE_PORT}:${CONFIG_SERVICE_PORT}"
+    volumes:
+      - *mounted-repo-env
     depends_on:
       postgres:
         condition: service_healthy
 
   visibility-service:
-    build:
-      context: .
-      dockerfile: infra/docker/python-service.Dockerfile
-    command: ["uvicorn", "apps.visibility_service.app.main:app", "--host", "0.0.0.0", "--port", "8002"]
+    build: *python-build
+    command: ["uvicorn", "apps.visibility_service.app.main:app", "--host", "${SERVICE_BIND_HOST}", "--port", "${VISIBILITY_SERVICE_PORT}"]
     environment:
-      SERVICE_NAME: visibility-service
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ai_visibility}:${POSTGRES_PASSWORD:-ai_visibility_local}@postgres:5432/${POSTGRES_DB:-ai_visibility}
-      AI_VISIBILITY_CORS_ORIGINS: ${AI_VISIBILITY_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      SERVICE_NAME: ${VISIBILITY_SERVICE_NAME}
+      DATABASE_URL: *docker-database-url
+      AI_VISIBILITY_CORS_ORIGINS: ${AI_VISIBILITY_CORS_ORIGINS}
     ports:
-      - "8002:8002"
+      - "${VISIBILITY_SERVICE_PORT}:${VISIBILITY_SERVICE_PORT}"
     depends_on:
       postgres:
         condition: service_healthy
 
   insights-service:
-    build:
-      context: .
-      dockerfile: infra/docker/python-service.Dockerfile
-    command: ["uvicorn", "apps.insights_service.app.main:app", "--host", "0.0.0.0", "--port", "8003"]
+    build: *python-build
+    command: ["uvicorn", "apps.insights_service.app.main:app", "--host", "${SERVICE_BIND_HOST}", "--port", "${INSIGHTS_SERVICE_PORT}"]
     environment:
-      SERVICE_NAME: insights-service
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ai_visibility}:${POSTGRES_PASSWORD:-ai_visibility_local}@postgres:5432/${POSTGRES_DB:-ai_visibility}
-      AI_VISIBILITY_CORS_ORIGINS: ${AI_VISIBILITY_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+      SERVICE_NAME: ${INSIGHTS_SERVICE_NAME}
+      DATABASE_URL: *docker-database-url
+      AI_VISIBILITY_CORS_ORIGINS: ${AI_VISIBILITY_CORS_ORIGINS}
     ports:
-      - "8003:8003"
+      - "${INSIGHTS_SERVICE_PORT}:${INSIGHTS_SERVICE_PORT}"
     depends_on:
       postgres:
         condition: service_healthy
 
   visibility-worker:
-    build:
-      context: .
-      dockerfile: infra/docker/python-service.Dockerfile
-    command: ["python", "-m", "apps.worker.app.main"]
+    build: *python-build
+    command: ["sh", "-c", "while true; do python -m apps.worker.app.main; sleep $${WORKER_POLL_INTERVAL_SECONDS}; done"]
     environment:
-      SERVICE_NAME: visibility-worker
-      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ai_visibility}:${POSTGRES_PASSWORD:-ai_visibility_local}@postgres:5432/${POSTGRES_DB:-ai_visibility}
-      WORKER_MAX_ITEMS: ${WORKER_MAX_ITEMS:-25}
+      SERVICE_NAME: ${VISIBILITY_WORKER_SERVICE_NAME}
+      DATABASE_URL: *docker-database-url
+      WORKER_MAX_ITEMS: ${WORKER_MAX_ITEMS}
+      WORKER_POLL_INTERVAL_SECONDS: ${WORKER_POLL_INTERVAL_SECONDS}
     volumes:
-      - ./.env:/app/.env:ro
+      - *mounted-repo-env
     depends_on:
       postgres:
         condition: service_healthy
 
   web:
-    image: node:24-alpine
-    working_dir: /app/apps/web
-    command: ["sh", "-c", "npm install && npm run dev -- --host 0.0.0.0"]
+    image: ${WEB_IMAGE}
+    working_dir: ${WEB_WORKDIR}
+    command: ["sh", "-c", "npm install && npm run dev -- --host ${WEB_BIND_HOST} --port ${WEB_PORT}"]
     environment:
-      VITE_CONFIG_SERVICE_URL: http://localhost:8001
-      VITE_VISIBILITY_SERVICE_URL: http://localhost:8002
-      VITE_INSIGHTS_SERVICE_URL: http://localhost:8003
+      VITE_CONFIG_SERVICE_URL: ${VITE_CONFIG_SERVICE_URL}
+      VITE_VISIBILITY_SERVICE_URL: ${VITE_VISIBILITY_SERVICE_URL}
+      VITE_INSIGHTS_SERVICE_URL: ${VITE_INSIGHTS_SERVICE_URL}
     ports:
-      - "5173:5173"
+      - "${WEB_PORT}:${WEB_PORT}"
     volumes:
-      - .:/app
+      - type: bind
+        source: ${REPO_SOURCE_DIR}
+        target: ${CONTAINER_APP_DIR}
     depends_on:
       - config-service
       - visibility-service

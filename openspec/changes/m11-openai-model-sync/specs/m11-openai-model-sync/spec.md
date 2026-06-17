@@ -51,4 +51,3 @@ The Config tab SHALL let an operator trigger OpenAI model sync and inspect refre
 - THEN the UI calls the sync endpoint
 - AND refreshes the config data
 - AND shows discovered, created, updated, and unavailable counts.
-

@@ -26,4 +26,3 @@ Config tab
 - OpenAI client tests use `httpx.MockTransport`.
 - Config-service API tests use a fake discovery client.
 - Frontend sync action is covered by typecheck/build.
-

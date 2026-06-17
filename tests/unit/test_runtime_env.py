@@ -18,7 +18,7 @@ class RuntimeEnvTests(unittest.TestCase):
                     (
                         "AI_VISIBILITY_TEST_VALUE=from-file",
                         "AI_VISIBILITY_EXISTING_VALUE=from-file",
-                        "AI_VISIBILITY_QUOTED_VALUE=\"quoted # value\"",
+                        'AI_VISIBILITY_QUOTED_VALUE="quoted # value"',
                         "AI_VISIBILITY_COMMENTED_VALUE=value # local comment",
                     )
                 ),

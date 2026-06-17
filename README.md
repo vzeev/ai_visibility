@@ -37,6 +37,7 @@ poetry run test-service
 poetry run test-integration
 poetry run check-skeleton
 poetry run demo-e2e
+poetry run dev
 poetry run web-check
 docker compose config
 cd apps/web
@@ -166,12 +167,15 @@ Then run the worker:
 poetry run python -m apps.worker.app.main
 ```
 
-The Docker worker mounts `.env` read-only and reads the same runtime keys without
-storing provider secrets in `docker-compose.yml`:
+Docker Compose keeps provider secrets and local settings out of
+`docker-compose.yml`. Compose reads `.env` for interpolation, while `.env` is
+mounted read-only only into containers that need provider runtime settings:
+`config-service` for model sync and `visibility-worker` for provider calls.
+Ports, image names, and local service URLs are also read from `.env`.
 
 ```bash
 copy .env.example .env
-docker compose up visibility-worker
+poetry run dev
 ```
 
 ## M6 Insights Deterministic Extraction
@@ -233,13 +237,15 @@ The repo now has a deterministic end-to-end smoke path for the local demo:
 - runs deterministic insights extraction and writes a summary
 - prints the run IDs and evidence counts as JSON
 
-Start the local stack:
+Start the full local Docker stack, including migrations, backend services,
+polling visibility worker, and frontend:
 
 ```bash
-docker compose up -d postgres config-service visibility-service insights-service web
+poetry run dev
 ```
 
-Run the smoke command against the local Postgres database. It uses
+Run the smoke command against the local Postgres database when you want to seed
+and exercise the demo flow. It uses
 `AI_VISIBILITY_DEMO_DATABASE_URL` from `.env` when present, otherwise it falls
 back to `DATABASE_URL`.
 
@@ -307,7 +313,8 @@ the DB-backed model registry:
 - The Config tab exposes a `Sync OpenAI models` action in the Model limits
   panel and refreshes registry data after a successful sync.
 
-Real model sync reads the same repository root `.env` key as runtime execution:
+Real model sync reads the same repository root `.env` key as runtime execution.
+In Docker, `config-service` receives `.env` as a read-only mount:
 
 ```dotenv
 OPENAI_API_KEY=...

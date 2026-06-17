@@ -60,6 +60,7 @@ reportPrivateUsage = false
 [tool.poetry.scripts]
 check-skeleton = "scripts.ai_visibility_tools.cli_tasks:main_check_skeleton"
 demo-e2e = "scripts.ai_visibility_tools.cli_tasks:main_demo_e2e"
+dev = "scripts.ai_visibility_tools.cli_tasks:main_dev"
 doctor = "scripts.ai_visibility_tools.cli_tasks:main_doctor"
 fix = "scripts.ai_visibility_tools.cli_tasks:main_fix"
 precommit = "scripts.ai_visibility_tools.cli_tasks:main_precommit"
