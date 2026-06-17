@@ -51,6 +51,7 @@ export function InsightsPanel({
   }
 
   const summaries = insightsState.data?.summaries ?? [];
+  const runs = insightsState.data?.runs ?? [];
   const latestSucceededRun = latestCompletedRun(insightsState.data?.runs ?? []);
 
   async function analyzeLatestRun() {
@@ -120,8 +121,8 @@ export function InsightsPanel({
             <p className="eyebrow" data-cy="insights-extraction-mode">
               Deterministic extraction
             </p>
-            <h2>Visibility summaries</h2>
-            <p className="muted">{summaries.length} extraction summaries</p>
+            <h2>Insight summaries</h2>
+            <p className="muted">{summaries.length} analyzed visibility runs</p>
           </div>
           <div className="toolbar-controls">
             <button
@@ -141,22 +142,49 @@ export function InsightsPanel({
         {analysisMessage ? <p className="inline-success">{analysisMessage}</p> : null}
         {analysisError ? <p className="inline-error">{analysisError}</p> : null}
         <div className="summary-list" data-cy="insights-summary-list">
-          {summaries.map((summary) => (
-            <button
-              className={summary.id === selectedSummary?.id ? "summary-row active" : "summary-row"}
-              key={summary.id}
-              type="button"
-              onClick={() => setSelectedSummaryId(summary.id)}
-            >
-              <div>
-                <strong>{summary.extraction_version}</strong>
-                <span className="mono-cell">{summary.run_batch_id.slice(0, 8)}</span>
-              </div>
-              <span className="badge neutral">
-                {numberValue(summary.summary_json.raw_response_count)} raw
-              </span>
-            </button>
-          ))}
+          {summaries.map((summary) => {
+            const run = runForSummary(runs, summary);
+            const extractionCount = summaryArray(summary, "extraction_run_ids").length;
+            const rawCount = numberValue(summary.summary_json.raw_response_count);
+            return (
+              <button
+                className={summary.id === selectedSummary?.id ? "summary-row active" : "summary-row"}
+                key={summary.id}
+                type="button"
+                onClick={() => setSelectedSummaryId(summary.id)}
+              >
+                <div className="summary-main">
+                  <div className="summary-title-row">
+                    <strong>{summary.extraction_version}</strong>
+                    <span className={`badge ${run?.status ?? "neutral"}`}>
+                      {run?.status ?? "summary"}
+                    </span>
+                  </div>
+                  <div className="summary-meta-grid">
+                    <span>
+                      <em>Batch created</em>
+                      {formatTimestamp(run?.created_at)}
+                    </span>
+                    <span>
+                      <em>Summary created</em>
+                      {formatTimestamp(summary.created_at)}
+                    </span>
+                    <span>
+                      <em>Run batch</em>
+                      <span className="mono-cell">{shortId(summary.run_batch_id)}</span>
+                    </span>
+                  </div>
+                </div>
+                <div className="summary-counts">
+                  <span className="badge neutral">{rawCount} raw</span>
+                  <span className="badge neutral">{extractionCount} extractions</span>
+                  {run?.item_count ? (
+                    <span className="badge neutral">{run.item_count} queued</span>
+                  ) : null}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -217,6 +245,10 @@ async function loadInsightsData() {
 
 function latestCompletedRun(runs: RunBatch[]): RunBatch | null {
   return runs.find((run) => run.status === "succeeded") ?? null;
+}
+
+function runForSummary(runs: RunBatch[], summary: VisibilitySummary): RunBatch | null {
+  return runs.find((run) => run.id === summary.run_batch_id) ?? null;
 }
 
 function ExtractionDetail({ state }: { state: AsyncState<ExtractionRun | null> }) {
@@ -334,6 +366,27 @@ function summaryArray(summary: VisibilitySummary | null, key: string): string[] 
 
 function firstString(values: string[]): string | null {
   return values.length > 0 ? values[0] : null;
+}
+
+function shortId(id: string): string {
+  return id.slice(0, 8);
+}
+
+function formatTimestamp(value: string | null | undefined): string {
+  if (!value) {
+    return "-";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(date);
 }
 
 function objectKeys(value: unknown): string[] {

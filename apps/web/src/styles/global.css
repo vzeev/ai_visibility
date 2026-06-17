@@ -576,6 +576,55 @@ label,
   background: #f2f7ff;
 }
 
+.summary-row {
+  align-items: flex-start;
+}
+
+.summary-main {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.summary-title-row,
+.summary-counts {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.summary-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.summary-meta-grid > span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--color-text);
+  font-size: 12px;
+}
+
+.summary-meta-grid em {
+  color: var(--color-muted);
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.summary-counts {
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+
 .compact-row {
   min-height: 54px;
 }
@@ -654,6 +703,8 @@ label,
 }
 
 .badge.success,
+.badge.succeeded,
+.badge.completed,
 .badge.running {
   background: #eefaf4;
   color: var(--color-green);
@@ -922,7 +973,8 @@ label,
   .demo-overview,
   .detail-list,
   .evidence-grid,
-  .form-grid {
+  .form-grid,
+  .summary-meta-grid {
     grid-template-columns: 1fr;
   }
 
@@ -959,6 +1011,7 @@ label,
   .model-row,
   .record-row,
   .summary-row,
+  .summary-counts,
   .compact-row,
   .pagination-bar {
     align-items: stretch;

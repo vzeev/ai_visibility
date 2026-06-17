@@ -52,6 +52,7 @@ class VisibilitySummary(InsightsDto):
     run_batch_id: UUID
     extraction_version: str
     summary_json: dict[str, Any]
+    created_at: datetime
 
 
 class BatchExtractionResponse(BaseModel):

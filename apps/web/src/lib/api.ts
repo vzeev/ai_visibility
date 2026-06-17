@@ -154,6 +154,7 @@ export type VisibilitySummary = {
   run_batch_id: string;
   extraction_version: string;
   summary_json: Record<string, unknown>;
+  created_at?: string | null;
 };
 
 export type BatchExtractionResponse = {

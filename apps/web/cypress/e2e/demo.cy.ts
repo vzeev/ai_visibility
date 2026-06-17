@@ -142,6 +142,7 @@ const summaries = [
     brand_id: brandId,
     run_batch_id: runBatchId,
     extraction_version: "deterministic-v1",
+    created_at: "2026-06-17T09:35:00.000Z",
     summary_json: {
       raw_response_count: 1,
       raw_response_ids: [rawResponseId],
@@ -268,7 +269,12 @@ describe("Brandlight interview demo", () => {
     cy.get('[data-cy="insights-extraction-mode"]').contains("Deterministic extraction");
     cy.get('[data-cy="analyze-latest-run"]').click();
     cy.wait("@extractRun");
+    cy.contains("Insight summaries");
     cy.get('[data-cy="insights-summary-list"]').contains("deterministic-v1");
+    cy.get('[data-cy="insights-summary-list"]').contains("Batch created");
+    cy.get('[data-cy="insights-summary-list"]').contains("Summary created");
+    cy.get('[data-cy="insights-summary-list"]').contains("succeeded");
+    cy.get('[data-cy="insights-summary-list"]').contains("2 queued");
     cy.get('[data-cy="extraction-evidence"]').contains("Brandlight");
     cy.get('[data-cy="extraction-evidence"]').contains("brandlight.ai");
     cy.get('[data-cy="evidence-raw-response-link"]').first().click();

@@ -94,6 +94,7 @@ class InsightsServiceApiTests(unittest.TestCase):
         self.assertEqual(1, result["raw_response_count"])
         summary = result["summary"]
         self.assertEqual("deterministic-v1", summary["extraction_version"])
+        self.assertIsInstance(summary["created_at"], str)
         self.assertEqual(
             [str(self.ids["raw_response_id"])], summary["summary_json"]["raw_response_ids"]
         )
