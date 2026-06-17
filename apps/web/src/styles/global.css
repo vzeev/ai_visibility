@@ -710,10 +710,13 @@ label,
 
 .detail-panel {
   align-self: start;
+  grid-column: 1 / -1;
+  scroll-margin-top: 20px;
 }
 
 .detail-list {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin: 0 0 18px;
 }
@@ -740,6 +743,18 @@ label,
   line-height: 1.55;
 }
 
+.detail-panel pre {
+  max-height: 420px;
+  overflow: auto;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #f8faf8;
+  color: var(--color-text);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
 .mono-cell {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 12px;
@@ -755,8 +770,15 @@ label,
   align-items: center;
   justify-content: center;
   border-radius: 6px;
+  border: 1px solid transparent;
   background: #f1f5ff;
   color: var(--color-brand-dark);
+  cursor: pointer;
+}
+
+.reference-chip:hover {
+  border-color: var(--color-brand);
+  background: #e8f0ff;
 }
 
 .queue-health {
@@ -898,6 +920,7 @@ label,
   .content-grid,
   .authoring-grid,
   .demo-overview,
+  .detail-list,
   .evidence-grid,
   .form-grid {
     grid-template-columns: 1fr;

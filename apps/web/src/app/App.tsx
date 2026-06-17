@@ -16,6 +16,12 @@ const tabs: Array<{ id: TabId; label: string }> = [
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabId>("config");
+  const [focusedRawResponseId, setFocusedRawResponseId] = useState<string | null>(null);
+
+  function openRawResponse(rawResponseId: string) {
+    setFocusedRawResponseId(rawResponseId);
+    setActiveTab("visibility");
+  }
 
   return (
     <div className="app-shell">
@@ -64,8 +70,10 @@ export function App() {
 
         {activeTab === "config" && <ConfigPanel />}
         {activeTab === "queue" && <QueuePanel />}
-        {activeTab === "visibility" && <VisibilityPanel />}
-        {activeTab === "insights" && <InsightsPanel />}
+        {activeTab === "visibility" && (
+          <VisibilityPanel focusedRawResponseId={focusedRawResponseId} />
+        )}
+        {activeTab === "insights" && <InsightsPanel onOpenRawResponse={openRawResponse} />}
       </main>
     </div>
   );

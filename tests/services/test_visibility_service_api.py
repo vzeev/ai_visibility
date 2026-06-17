@@ -88,6 +88,10 @@ class VisibilityServiceApiTests(unittest.TestCase):
         self.assertEqual("gpt-test", page["items"][0]["model_id"])
         self.assertIn("Brandlight", page["items"][0]["output_text"])
 
+        direct_raw = _dict_payload(self._get(f"/api/v1/raw-responses/{first_raw['id']}"))
+        self.assertEqual(first_raw["id"], direct_raw["id"])
+        self.assertEqual("response-1", direct_raw["provider_response_id"])
+
         queue_after = _dict_payload(self._get("/api/v1/queue"))
         self.assertEqual(1, queue_after["succeeded"])
         self.assertEqual(1, queue_after["pending"])

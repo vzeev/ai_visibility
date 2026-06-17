@@ -196,6 +196,9 @@ describe("Brandlight interview demo", () => {
     cy.intercept("GET", "**/api/v1/queue", queue).as("queue");
     cy.intercept("GET", "**/api/v1/runs", runs).as("runs");
     cy.intercept("GET", "**/api/v1/raw-responses?*", rawPage).as("rawResponses");
+    cy.intercept("GET", `**/api/v1/raw-responses/${rawResponseId}`, rawPage.items[0]).as(
+      "rawResponseById"
+    );
     cy.intercept("GET", "**/api/v1/summaries", summaries).as("summaries");
     cy.intercept("GET", `**/api/v1/extraction-runs/${extractionRunId}`, extractionRun).as(
       "extractionRun"
@@ -268,5 +271,22 @@ describe("Brandlight interview demo", () => {
     cy.get('[data-cy="insights-summary-list"]').contains("deterministic-v1");
     cy.get('[data-cy="extraction-evidence"]').contains("Brandlight");
     cy.get('[data-cy="extraction-evidence"]').contains("brandlight.ai");
+    cy.get('[data-cy="evidence-raw-response-link"]').first().click();
+    cy.wait("@rawResponseById");
+    cy.get('[data-cy="tab-visibility"]').should("have.class", "active");
+    cy.get('[data-cy="raw-response-detail"]').contains(rawResponseId);
+    cy.get('[data-cy="raw-response-detail"]').contains("Brandlight is a strong AI visibility platform");
+    cy.get('[data-cy="raw-response-detail"]').should(($detail) => {
+      const detailRect = $detail[0].getBoundingClientRect();
+      expect(detailRect.top).to.be.greaterThan(-1);
+      expect(detailRect.top).to.be.lessThan(Cypress.config("viewportHeight") * 0.45);
+    });
+    cy.get('[data-cy="raw-response-list"]').then(($list) => {
+      const listWidth = $list[0].getBoundingClientRect().width;
+      cy.get('[data-cy="raw-response-detail"]').should(($detail) => {
+        const detailWidth = $detail[0].getBoundingClientRect().width;
+        expect(detailWidth).to.be.greaterThan(listWidth);
+      });
+    });
   });
 });

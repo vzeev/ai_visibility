@@ -11,7 +11,11 @@ import {
 import type { AsyncState } from "../../lib/useAsyncData";
 import { useAsyncData } from "../../lib/useAsyncData";
 
-export function InsightsPanel() {
+export function InsightsPanel({
+  onOpenRawResponse
+}: {
+  onOpenRawResponse: (rawResponseId: string) => void;
+}) {
   const insightsState = useAsyncData(loadInsightsData, []);
   const [selectedSummaryId, setSelectedSummaryId] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -178,9 +182,16 @@ export function InsightsPanel() {
           {summaryArray(selectedSummary, "raw_response_ids")
             .slice(0, 6)
             .map((id) => (
-              <span className="mono-cell reference-chip" key={id}>
-                {id.slice(0, 8)}
-              </span>
+              <button
+                className="mono-cell reference-chip"
+                data-cy="evidence-raw-response-link"
+                key={id}
+                type="button"
+                onClick={() => onOpenRawResponse(id)}
+                title={`Open raw response ${id}`}
+              >
+                View response {id.slice(0, 8)}
+              </button>
             ))}
         </div>
       </div>

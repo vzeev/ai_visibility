@@ -230,7 +230,8 @@ export const visibilityApi = {
       query.set("q", params.q.trim());
     }
     return getJson<RawResponsePage>(visibilityBaseUrl, `/api/v1/raw-responses?${query}`);
-  }
+  },
+  rawResponse: (id: string) => getJson<RawResponseItem>(visibilityBaseUrl, `/api/v1/raw-responses/${id}`)
 };
 
 export const insightsApi = {

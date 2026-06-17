@@ -119,5 +119,13 @@ def list_raw_responses(
     )
 
 
+@router.get("/raw-responses/{raw_response_id}", response_model=RawResponseItem)
+def get_raw_response(
+    raw_response_id: str,
+    repository: VisibilityRepository = Depends(get_repository),
+) -> RawResponseItem:
+    return RawResponseItem.model_validate(repository.get_raw_response(_uuid(raw_response_id)))
+
+
 def _uuid(value: str) -> UUID:
     return UUID(value)

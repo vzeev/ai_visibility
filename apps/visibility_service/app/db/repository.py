@@ -249,6 +249,9 @@ class VisibilityRepository:
             metadata=request_metadata,
         )
 
+    def get_raw_response(self, raw_response_id: UUID) -> models.RawResponse:
+        return self._require(models.RawResponse, raw_response_id, "raw response not found")
+
     def list_raw_responses(self, *, q: str | None, limit: int, offset: int) -> RawResponsePage:
         search_condition = None
         if q:
