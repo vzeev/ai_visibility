@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 
 import { EmptyState, ErrorState, LoadingState } from "../../components/DataState";
 import {
@@ -56,6 +56,26 @@ export function ConfigPanel() {
   const [rateLimitForm, setRateLimitForm] = useState(defaultRateLimitForm);
   const [saving, setSaving] = useState<FormKey | null>(null);
   const [formMessage, setFormMessage] = useState<FormMessage | null>(null);
+  const promptsForVersion = state.data?.prompts ?? [];
+  const selectedVersionPromptId = versionForm.promptId || promptsForVersion[0]?.id || "";
+  const selectedVersionPrompt = promptsForVersion.find(
+    (prompt) => prompt.id === selectedVersionPromptId
+  );
+
+  useEffect(() => {
+    if (!selectedVersionPrompt) {
+      return;
+    }
+    setVersionForm((current) => {
+      if (current.promptId === selectedVersionPrompt.id && current.promptText) {
+        return current;
+      }
+      return {
+        promptId: selectedVersionPrompt.id,
+        promptText: selectedVersionPrompt.active_version.prompt_text
+      };
+    });
+  }, [selectedVersionPrompt?.id, selectedVersionPrompt?.active_version.prompt_text]);
 
   if (state.isLoading && !state.data) {
     return <LoadingState title="Loading configuration" />;
@@ -92,7 +112,7 @@ export function ConfigPanel() {
   const selectedCredentialProviderId =
     credentialForm.providerId || data.providers[0]?.id || "";
   const selectedPromptSetId = promptForm.promptSetId || data.promptSets[0]?.id || "";
-  const selectedPromptId = versionForm.promptId || data.prompts[0]?.id || "";
+  const selectedPromptId = selectedVersionPromptId;
   const selectedRateLimitProviderId =
     rateLimitForm.providerId || data.providers[0]?.id || "";
   const selectedOpenAiProvider = data.providers.find(
@@ -310,65 +330,18 @@ export function ConfigPanel() {
       <div className="panel span-3 authoring-panel" data-cy="config-authoring">
         <div className="panel-header toolbar-header">
           <div>
-            <p className="eyebrow">Config authoring</p>
-            <h2>Prompts, credentials, and rate limits</h2>
+            <p className="eyebrow">Prompts config</p>
+            <h2>Demo prompt questions</h2>
+            <p className="muted compact-muted">
+              This is the part to change during the demo. Edits create new prompt versions.
+            </p>
           </div>
           <button type="button" onClick={() => void state.reload()}>
             Refresh
           </button>
         </div>
 
-        <div className="authoring-grid">
-          <form className="authoring-section" onSubmit={(event) => void submitCredential(event)}>
-            <div>
-              <h3>Provider credential</h3>
-              <p className="muted compact-muted">Token input is write-only. Readback stays redacted.</p>
-            </div>
-            <label>
-              Provider
-              <select
-                disabled={data.providers.length === 0 || saving === "credential"}
-                value={selectedCredentialProviderId}
-                onChange={(event) =>
-                  setCredentialForm({ ...credentialForm, providerId: event.target.value })
-                }
-              >
-                {data.providers.length === 0 ? <option value="">No providers</option> : null}
-                {data.providers.map((provider) => (
-                  <option key={provider.id} value={provider.id}>
-                    {provider.display_name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Label
-              <input
-                value={credentialForm.label}
-                onChange={(event) =>
-                  setCredentialForm({ ...credentialForm, label: event.target.value })
-                }
-                placeholder="OpenAI interview demo token"
-              />
-            </label>
-            <label>
-              Token
-              <input
-                autoComplete="off"
-                type="password"
-                value={credentialForm.token}
-                onChange={(event) =>
-                  setCredentialForm({ ...credentialForm, token: event.target.value })
-                }
-                placeholder="sk-..."
-              />
-            </label>
-            <FormMessageView message={formMessage} form="credential" />
-            <button type="submit" disabled={saving === "credential" || data.providers.length === 0}>
-              {saving === "credential" ? "Saving" : "Save credential"}
-            </button>
-          </form>
-
+        <div className="authoring-grid prompt-authoring-grid">
           <form className="authoring-section" onSubmit={(event) => void submitPrompt(event)}>
             <div>
               <h3>New prompt</h3>
@@ -418,7 +391,11 @@ export function ConfigPanel() {
               />
             </label>
             <FormMessageView message={formMessage} form="prompt" />
-            <button type="submit" disabled={saving === "prompt" || data.promptSets.length === 0}>
+            <button
+              className="primary-action"
+              type="submit"
+              disabled={saving === "prompt" || data.promptSets.length === 0}
+            >
               {saving === "prompt" ? "Creating" : "Create prompt"}
             </button>
           </form>
@@ -433,9 +410,13 @@ export function ConfigPanel() {
               <select
                 disabled={data.prompts.length === 0 || saving === "version"}
                 value={selectedPromptId}
-                onChange={(event) =>
-                  setVersionForm({ ...versionForm, promptId: event.target.value })
-                }
+                onChange={(event) => {
+                  const prompt = data.prompts.find((item) => item.id === event.target.value);
+                  setVersionForm({
+                    promptId: event.target.value,
+                    promptText: prompt?.active_version.prompt_text ?? ""
+                  });
+                }}
               >
                 {data.prompts.length === 0 ? <option value="">No prompts</option> : null}
                 {data.prompts.map((prompt) => (
@@ -448,6 +429,7 @@ export function ConfigPanel() {
             <label>
               New prompt text
               <textarea
+                data-cy="prompt-version-text"
                 value={versionForm.promptText}
                 onChange={(event) =>
                   setVersionForm({ ...versionForm, promptText: event.target.value })
@@ -456,8 +438,80 @@ export function ConfigPanel() {
               />
             </label>
             <FormMessageView message={formMessage} form="version" />
-            <button type="submit" disabled={saving === "version" || data.prompts.length === 0}>
+            <button
+              className="primary-action"
+              type="submit"
+              disabled={saving === "version" || data.prompts.length === 0}
+            >
               {saving === "version" ? "Activating" : "Activate new version"}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div className="panel span-3 authoring-panel provider-config-panel">
+        <div className="panel-header toolbar-header">
+          <div>
+            <p className="eyebrow">Providers config</p>
+            <h2>Provider, model, and rate-limit setup</h2>
+            <p className="muted compact-muted">
+              Setup/reference area. Keep this stable during the demo unless provider access changes.
+            </p>
+          </div>
+        </div>
+
+        <div className="authoring-grid provider-authoring-grid">
+          <form className="authoring-section" onSubmit={(event) => void submitCredential(event)}>
+            <div>
+              <h3>Provider credential</h3>
+              <p className="muted compact-muted">Token input is write-only. Readback stays redacted.</p>
+            </div>
+            <label>
+              Provider
+              <select
+                disabled={data.providers.length === 0 || saving === "credential"}
+                value={selectedCredentialProviderId}
+                onChange={(event) =>
+                  setCredentialForm({ ...credentialForm, providerId: event.target.value })
+                }
+              >
+                {data.providers.length === 0 ? <option value="">No providers</option> : null}
+                {data.providers.map((provider) => (
+                  <option key={provider.id} value={provider.id}>
+                    {provider.display_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Label
+              <input
+                value={credentialForm.label}
+                onChange={(event) =>
+                  setCredentialForm({ ...credentialForm, label: event.target.value })
+                }
+                placeholder="OpenAI interview demo token"
+              />
+            </label>
+            <label>
+              Token
+              <input
+                autoComplete="off"
+                type="password"
+                value={credentialForm.token}
+                onChange={(event) =>
+                  setCredentialForm({ ...credentialForm, token: event.target.value })
+                }
+                placeholder="sk-..."
+              />
+            </label>
+            <FormMessageView message={formMessage} form="credential" />
+            <button
+              className="primary-action"
+              type="submit"
+              disabled={saving === "credential" || data.providers.length === 0}
+            >
+              {saving === "credential" ? "Saving" : "Save credential"}
             </button>
           </form>
 
@@ -550,7 +604,11 @@ export function ConfigPanel() {
               />
             </div>
             <FormMessageView message={formMessage} form="rateLimit" />
-            <button type="submit" disabled={saving === "rateLimit" || data.providers.length === 0}>
+            <button
+              className="primary-action"
+              type="submit"
+              disabled={saving === "rateLimit" || data.providers.length === 0}
+            >
               {saving === "rateLimit" ? "Creating" : "Create rate limit"}
             </button>
           </form>
@@ -589,6 +647,27 @@ export function ConfigPanel() {
         )}
       </div>
 
+      <div className="panel span-2">
+        <div className="panel-header">
+          <h2>Prompts</h2>
+        </div>
+        {data.prompts.length === 0 ? (
+          <EmptyState title="No prompts" description="Prompt versions will appear here." />
+        ) : (
+          <div className="prompt-list">
+            {data.prompts.map((prompt) => (
+              <div className="prompt-row" key={prompt.id}>
+                <div>
+                  <strong>{prompt.name}</strong>
+                  <p>{prompt.active_version.prompt_text}</p>
+                </div>
+                <span className="badge neutral">v{prompt.active_version.version}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       <div className="panel">
         <div className="panel-header">
           <h2>Provider credentials</h2>
@@ -614,31 +693,11 @@ export function ConfigPanel() {
         )}
       </div>
 
-      <div className="panel span-2">
-        <div className="panel-header">
-          <h2>Prompts</h2>
-        </div>
-        {data.prompts.length === 0 ? (
-          <EmptyState title="No prompts" description="Prompt versions will appear here." />
-        ) : (
-          <div className="prompt-list">
-            {data.prompts.map((prompt) => (
-              <div className="prompt-row" key={prompt.id}>
-                <div>
-                  <strong>{prompt.name}</strong>
-                  <p>{prompt.active_version.prompt_text}</p>
-                </div>
-                <span className="badge neutral">v{prompt.active_version.version}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
       <div className="panel">
         <div className="panel-header">
           <h2>Model limits</h2>
           <button
+            className="primary-action"
             type="button"
             data-cy="sync-openai-models"
             disabled={!selectedOpenAiProvider || saving === "modelSync"}

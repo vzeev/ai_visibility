@@ -103,7 +103,14 @@ const models = [
 ];
 const queue = { pending: 1, running: 0, succeeded: 2, failed: 0, throttled: 1 };
 const runs = [
-  { id: runBatchId, brand_id: brandId, prompt_set_id: promptSetId, status: "succeeded", item_count: 2 }
+  {
+    id: runBatchId,
+    brand_id: brandId,
+    prompt_set_id: promptSetId,
+    status: "succeeded",
+    created_at: "2026-06-17T09:30:00.000Z",
+    item_count: 2
+  }
 ];
 const rawPage = {
   items: [
@@ -221,7 +228,13 @@ describe("Brandlight interview demo", () => {
 
     cy.get('[data-cy="tab-config"]').click();
     cy.get('[data-cy="config-active-setup"]').contains("https://www.brandlight.ai/");
-    cy.get('[data-cy="config-authoring"]').contains("Prompts, credentials, and rate limits");
+    cy.get('[data-cy="config-authoring"]').contains("Prompts config");
+    cy.get('[data-cy="config-authoring"]').contains("Demo prompt questions");
+    cy.contains("Providers config");
+    cy.get('[data-cy="prompt-version-text"]').should(
+      "have.value",
+      prompts[0].active_version.prompt_text
+    );
     cy.get('[data-cy="sync-openai-models"]').click();
     cy.wait("@syncModels");
     cy.contains("Synced 2 models");
@@ -231,7 +244,9 @@ describe("Brandlight interview demo", () => {
     cy.get('[data-cy="queue-run-expansion"]').contains("1 enabled models");
     cy.get('[data-cy="create-run"]').click();
     cy.wait("@createRun");
+    cy.get('[data-cy="reload-run-batches"]').click();
     cy.get('[data-cy="run-batches"]').contains("succeeded");
+    cy.get('[data-cy="run-batches"]').contains("Timestamp");
 
     cy.get('[data-cy="tab-visibility"]').click();
     cy.get('[data-cy="model-comparison"]').contains("gpt-demo");
@@ -248,4 +263,3 @@ describe("Brandlight interview demo", () => {
     cy.get('[data-cy="extraction-evidence"]').contains("brandlight.ai");
   });
 });
-

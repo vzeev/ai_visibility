@@ -82,6 +82,7 @@ export type RunBatch = {
   brand_id: string;
   prompt_set_id: string;
   status: string;
+  created_at?: string | null;
   item_count?: number | null;
 };
 

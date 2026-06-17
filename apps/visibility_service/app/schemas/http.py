@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any
 from uuid import UUID
 
@@ -22,6 +23,7 @@ class RunBatch(VisibilityDto):
     brand_id: UUID
     prompt_set_id: UUID
     status: str
+    created_at: datetime
     item_count: int | None = None
 
 

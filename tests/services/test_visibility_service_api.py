@@ -45,6 +45,7 @@ class VisibilityServiceApiTests(unittest.TestCase):
         run = self._create_run(sample_count=2, max_attempts=3)
         self.assertEqual("queued", run["status"])
         self.assertEqual(2, run["item_count"])
+        self.assertIsInstance(run["created_at"], str)
 
         queue = _dict_payload(self._get("/api/v1/queue"))
         self.assertEqual(2, queue["pending"])

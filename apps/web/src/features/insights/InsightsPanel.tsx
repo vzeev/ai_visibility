@@ -88,6 +88,7 @@ export function InsightsPanel() {
             </p>
           </div>
           <button
+            className="primary-action"
             type="button"
             data-cy="analyze-latest-run"
             disabled={!latestSucceededRun || isAnalyzing}
@@ -120,6 +121,7 @@ export function InsightsPanel() {
           </div>
           <div className="toolbar-controls">
             <button
+              className="primary-action"
               type="button"
               data-cy="analyze-latest-run"
               disabled={!latestSucceededRun || isAnalyzing}

@@ -128,6 +128,7 @@ export function QueuePanel() {
           </label>
           <div className="form-action">
             <button
+              className="primary-action"
               type="button"
               data-cy="create-run"
               disabled={isCreating}
@@ -165,6 +166,14 @@ export function QueuePanel() {
       <div className="panel span-3" data-cy="run-batches">
         <div className="panel-header">
           <h2>Run batches</h2>
+          <button
+            type="button"
+            data-cy="reload-run-batches"
+            disabled={state.isLoading}
+            onClick={() => void state.reload()}
+          >
+            {state.isLoading ? "Reloading" : "Reload"}
+          </button>
         </div>
         {runs.length === 0 ? (
           <EmptyState title="No run batches" description="Create a run to populate the queue." />
@@ -173,6 +182,7 @@ export function QueuePanel() {
             <thead>
               <tr>
                 <th>Run</th>
+                <th>Timestamp</th>
                 <th>Brand</th>
                 <th>Prompt set</th>
                 <th>Status</th>
@@ -183,6 +193,7 @@ export function QueuePanel() {
               {runs.slice(0, 12).map((run) => (
                 <tr key={run.id}>
                   <td className="mono-cell">{shortId(run.id)}</td>
+                  <td>{formatTimestamp(run.created_at)}</td>
                   <td>{nameById(brands, run.brand_id)}</td>
                   <td>{promptSetName(promptSets, run.prompt_set_id)}</td>
                   <td>
@@ -230,4 +241,20 @@ function promptSetName(promptSets: PromptSet[], id: string): string {
 
 function shortId(id: string): string {
   return id.slice(0, 8);
+}
+
+function formatTimestamp(value: string | null | undefined): string {
+  if (!value) {
+    return "-";
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+  return new Intl.DateTimeFormat(undefined, {
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(value));
 }

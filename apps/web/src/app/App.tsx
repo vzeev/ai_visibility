@@ -50,7 +50,7 @@ export function App() {
             <h1>Visibility for enterprise brands</h1>
           </div>
           <div className="header-actions" aria-label="Dashboard filters">
-            <span className="filter-chip">USA</span>
+            <span className="filter-chip">Israel</span>
             <span className="filter-chip">All engines</span>
             <span className="filter-chip">Last 30 days</span>
             <div className="status-strip" aria-label="System status">
