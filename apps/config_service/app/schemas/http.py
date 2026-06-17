@@ -164,6 +164,10 @@ class CreateModelRegistryRequest(BaseModel):
     capability_json: dict[str, Any] = Field(default_factory=dict)
 
 
+class UpdateModelVisibilityRequest(BaseModel):
+    enabled_for_visibility: bool
+
+
 class ModelSyncResponse(BaseModel):
     provider_id: UUID
     provider_key: str

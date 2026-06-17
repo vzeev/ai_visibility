@@ -210,6 +210,10 @@ describe("Brandlight interview demo", () => {
       unavailable_count: 0,
       models
     }).as("syncModels");
+    cy.intercept("PATCH", "**/api/v1/models/*/visibility", {
+      ...models[1],
+      enabled_for_visibility: true
+    }).as("updateModelVisibility");
     cy.intercept("POST", `**/api/v1/extractions/run-batches/${runBatchId}`, {
       run_batch_id: runBatchId,
       extraction_version: "deterministic-v1",
@@ -238,6 +242,9 @@ describe("Brandlight interview demo", () => {
     cy.get('[data-cy="sync-openai-models"]').click();
     cy.wait("@syncModels");
     cy.contains("Synced 2 models");
+    cy.get('[data-cy="toggle-model-gpt-disabled"]').click();
+    cy.wait("@updateModelVisibility");
+    cy.contains("gpt-disabled enabled for visibility runs");
 
     cy.get('[data-cy="tab-queue"]').click();
     cy.get('[data-cy="queue-run-expansion"]').contains("2 prompts");

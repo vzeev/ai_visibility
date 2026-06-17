@@ -187,6 +187,8 @@ export const configApi = {
   models: () => getJson<ModelRegistry[]>(configBaseUrl, "/api/v1/models"),
   syncModels: (providerId: string) =>
     postJson<ModelSyncResponse>(configBaseUrl, `/api/v1/providers/${providerId}/models/sync`, {}),
+  updateModelVisibility: (modelId: string, payload: { enabled_for_visibility: boolean }) =>
+    patchJson<ModelRegistry>(configBaseUrl, `/api/v1/models/${modelId}/visibility`, payload),
   createCredential: (payload: { provider_id: string; label: string; token: string }) =>
     postJson<ProviderCredential>(configBaseUrl, "/api/v1/provider-credentials", payload),
   createPrompt: (payload: {
@@ -248,6 +250,14 @@ async function getJson<T>(baseUrl: string, path: string): Promise<T> {
 async function postJson<T>(baseUrl: string, path: string, payload: unknown): Promise<T> {
   return requestJson<T>(baseUrl, path, {
     method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+}
+
+async function patchJson<T>(baseUrl: string, path: string, payload: unknown): Promise<T> {
+  return requestJson<T>(baseUrl, path, {
+    method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)
   });

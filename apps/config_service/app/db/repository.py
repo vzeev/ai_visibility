@@ -301,6 +301,20 @@ class ConfigRepository:
         )
         return self._add_one(model, conflict_message=f"model already exists: {model_id}")
 
+    def update_model_visibility(
+        self,
+        *,
+        model_registry_id: UUID,
+        enabled_for_visibility: bool,
+    ) -> models.ModelRegistry:
+        model = self._require_model(model_registry_id)
+        if enabled_for_visibility and not model.is_available:
+            raise ConflictError("unavailable model cannot be enabled for visibility")
+        model.enabled_for_visibility = enabled_for_visibility
+        self._commit()
+        self._session.refresh(model)
+        return model
+
     def sync_models(
         self,
         *,
@@ -369,6 +383,9 @@ class ConfigRepository:
 
     def _require_rate_limit(self, rate_limit_policy_id: UUID) -> models.RateLimitPolicy:
         return self._require(models.RateLimitPolicy, rate_limit_policy_id, "rate limit not found")
+
+    def _require_model(self, model_registry_id: UUID) -> models.ModelRegistry:
+        return self._require(models.ModelRegistry, model_registry_id, "model not found")
 
     def _prompt_record(self, prompt: models.Prompt) -> PromptRecord:
         active_version = self._session.scalar(

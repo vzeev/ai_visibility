@@ -53,6 +53,8 @@ Show:
 - Provider credential metadata with redacted token readback.
 - Rate-limit policies.
 - OpenAI model sync.
+- Model enable/disable controls. Disable fake/demo models and enable the real
+  OpenAI model selected for the walkthrough.
 
 Talking point:
 

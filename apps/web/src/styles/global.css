@@ -604,6 +604,17 @@ label,
   font-size: 12px;
 }
 
+.model-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.model-actions span {
+  margin-top: 0;
+}
+
 .subsection-divider {
   height: 1px;
   margin: 2px 0;

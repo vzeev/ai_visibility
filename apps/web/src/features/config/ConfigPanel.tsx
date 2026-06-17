@@ -10,7 +10,13 @@ import {
 } from "../../lib/api";
 import { useAsyncData } from "../../lib/useAsyncData";
 
-type FormKey = "credential" | "prompt" | "version" | "rateLimit" | "modelSync";
+type FormKey =
+  | "credential"
+  | "prompt"
+  | "version"
+  | "rateLimit"
+  | "modelSync"
+  | "modelVisibility";
 
 type FormMessage = {
   form: FormKey;
@@ -55,6 +61,7 @@ export function ConfigPanel() {
   const [versionForm, setVersionForm] = useState(defaultVersionForm);
   const [rateLimitForm, setRateLimitForm] = useState(defaultRateLimitForm);
   const [saving, setSaving] = useState<FormKey | null>(null);
+  const [savingModelId, setSavingModelId] = useState<string | null>(null);
   const [formMessage, setFormMessage] = useState<FormMessage | null>(null);
   const promptsForVersion = state.data?.prompts ?? [];
   const selectedVersionPromptId = versionForm.promptId || promptsForVersion[0]?.id || "";
@@ -281,6 +288,30 @@ export function ConfigPanel() {
       setFormMessage({ form: "modelSync", kind: "error", text: errorText(error) });
     } finally {
       setSaving(null);
+    }
+  }
+
+  async function updateModelVisibility(model: ModelRegistry, enabledForVisibility: boolean) {
+    setSavingModelId(model.id);
+    setFormMessage(null);
+    try {
+      await configApi.updateModelVisibility(model.id, {
+        enabled_for_visibility: enabledForVisibility
+      });
+      setFormMessage({
+        form: "modelVisibility",
+        kind: "success",
+        text: `${model.model_id} ${enabledForVisibility ? "enabled" : "disabled"} for visibility runs.`
+      });
+      await state.reload();
+    } catch (error) {
+      setFormMessage({
+        form: "modelVisibility",
+        kind: "error",
+        text: errorText(error)
+      });
+    } finally {
+      setSavingModelId(null);
     }
   }
 
@@ -707,6 +738,7 @@ export function ConfigPanel() {
           </button>
         </div>
         <FormMessageView message={formMessage} form="modelSync" />
+        <FormMessageView message={formMessage} form="modelVisibility" />
         <div className="model-list">
           {data.models.map((model) => (
             <div className="model-row" key={model.id}>
@@ -714,7 +746,20 @@ export function ConfigPanel() {
                 <strong>{model.model_id}</strong>
                 <span>{providerName(data.providers, model.provider_id)}</span>
               </div>
-              <ModelBadge model={model} />
+              <div className="model-actions">
+                <ModelBadge model={model} />
+                <button
+                  type="button"
+                  data-cy={`toggle-model-${model.model_id}`}
+                  disabled={
+                    savingModelId === model.id ||
+                    (!model.is_available && !model.enabled_for_visibility)
+                  }
+                  onClick={() => void updateModelVisibility(model, !model.enabled_for_visibility)}
+                >
+                  {model.enabled_for_visibility ? "Disable" : "Enable"}
+                </button>
+              </div>
             </div>
           ))}
           <div className="subsection-divider" />

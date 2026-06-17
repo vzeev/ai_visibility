@@ -29,6 +29,7 @@ from apps.config_service.app.schemas.http import (
     Provider,
     ProviderCredential,
     RateLimitPolicyResponse,
+    UpdateModelVisibilityRequest,
 )
 from apps.shared.ai.model_discovery import (
     ModelDiscoveryClient,
@@ -277,6 +278,19 @@ def create_model(
         enabled_for_visibility=payload.enabled_for_visibility,
         rate_limit_policy_id=payload.rate_limit_policy_id,
         capability_json=payload.capability_json,
+    )
+    return ModelRegistry.model_validate(model)
+
+
+@router.patch("/models/{model_registry_id}/visibility", response_model=ModelRegistry)
+def update_model_visibility(
+    model_registry_id: UUID,
+    payload: UpdateModelVisibilityRequest,
+    repository: ConfigRepository = Depends(get_repository),
+) -> ModelRegistry:
+    model = repository.update_model_visibility(
+        model_registry_id=model_registry_id,
+        enabled_for_visibility=payload.enabled_for_visibility,
     )
     return ModelRegistry.model_validate(model)
 

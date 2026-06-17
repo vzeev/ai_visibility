@@ -169,6 +169,60 @@ class ConfigServiceApiTests(unittest.TestCase):
         self.assertTrue(models_payload[0]["enabled_for_visibility"])
         self.assertEqual({"responses": True}, models_payload[0]["capability_json"])
 
+    def test_model_visibility_can_be_enabled_and_disabled(self) -> None:
+        provider = self._create_provider("openai-visibility")
+        model_response = self._post(
+            "/api/v1/models",
+            json={
+                "provider_id": provider["id"],
+                "model_id": "gpt-visible",
+                "display_name": "GPT Visible",
+                "owned_by": "openai",
+                "is_available": True,
+                "enabled_for_visibility": False,
+                "capability_json": {"responses": True},
+            },
+        )
+        self.assertEqual(201, model_response.status_code)
+        model = _dict_payload(model_response)
+
+        enabled_response = self._patch(
+            f"/api/v1/models/{model['id']}/visibility",
+            json={"enabled_for_visibility": True},
+        )
+        self.assertEqual(200, enabled_response.status_code)
+        self.assertTrue(_dict_payload(enabled_response)["enabled_for_visibility"])
+
+        disabled_response = self._patch(
+            f"/api/v1/models/{model['id']}/visibility",
+            json={"enabled_for_visibility": False},
+        )
+        self.assertEqual(200, disabled_response.status_code)
+        self.assertFalse(_dict_payload(disabled_response)["enabled_for_visibility"])
+
+    def test_unavailable_model_cannot_be_enabled_for_visibility(self) -> None:
+        provider = self._create_provider("openai-unavailable")
+        model_response = self._post(
+            "/api/v1/models",
+            json={
+                "provider_id": provider["id"],
+                "model_id": "gpt-stale",
+                "display_name": "GPT Stale",
+                "owned_by": "openai",
+                "is_available": False,
+                "enabled_for_visibility": False,
+                "capability_json": {},
+            },
+        )
+        self.assertEqual(201, model_response.status_code)
+        model = _dict_payload(model_response)
+
+        enabled_response = self._patch(
+            f"/api/v1/models/{model['id']}/visibility",
+            json={"enabled_for_visibility": True},
+        )
+        self.assertEqual(409, enabled_response.status_code)
+
     def test_model_sync_preserves_local_settings_and_marks_unavailable(self) -> None:
         provider = self._create_provider("openai")
         rate_limit_response = self._post(
@@ -274,6 +328,9 @@ class ConfigServiceApiTests(unittest.TestCase):
 
     def _post(self, url: str, *, json: dict[str, Any]) -> Response:
         return cast(Response, self.client.post(url, json=json))
+
+    def _patch(self, url: str, *, json: dict[str, Any]) -> Response:
+        return cast(Response, self.client.patch(url, json=json))
 
     def _get(self, url: str, *, params: dict[str, Any] | None = None) -> Response:
         return cast(Response, self.client.get(url, params=params))

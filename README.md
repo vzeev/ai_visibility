@@ -312,6 +312,9 @@ the DB-backed model registry:
   unavailable instead of deleted.
 - The Config tab exposes a `Sync OpenAI models` action in the Model limits
   panel and refreshes registry data after a successful sync.
+- The Config tab also exposes per-model enable/disable controls, so the demo
+  operator can disable fake models and enable the real OpenAI model used by new
+  visibility runs.
 
 Real model sync reads the same repository root `.env` key as runtime execution.
 In Docker, `config-service` receives `.env` as a read-only mount:
