@@ -1,15 +1,10 @@
 # AI Visibility Architecture Decisions
 
 This file is the canonical in-repo register for accepted architecture decisions.
-Task artifacts under `.ai/repo/tasks/` remain audit history, not the primary
-lookup place for current architecture.
 
-Product and interview-preparation context currently lives outside the repository
-in the Brandlight notes folder:
-
-```text
-C:\VladimirSoskin\Dropbox\Documents\личное\фин\obsidian\projects\!future\teamlead\brandlight
-```
+Product and interview-preparation context lives outside the repository. This
+repo keeps only implementation-facing decisions, contracts, tests, local
+infrastructure, and demo documentation that are safe to share.
 
 This repository records implementation-facing decisions needed to keep code,
 contracts, tests, local infrastructure, and the demo UI coherent.
@@ -18,19 +13,19 @@ contracts, tests, local infrastructure, and the demo UI coherent.
 
 Status: accepted.
 
-Product and interview context stays in the external Brandlight notes folder. The
-repo keeps local mirrors and implementation artifacts under:
+Product and interview context stays outside the public repository. The repo
+keeps implementation artifacts under:
 
 - `contracts/` for API, database, and enum interface contracts.
 - `openspec/` for behavior changes and accepted behavior specs.
 - `docs/` for human-facing architecture, workflows, decisions, and runbooks.
-- `.ai/repo/tasks/` for agent audit history only.
 
 Accepted implementation deltas that materially change the product story or demo
 positioning should be reflected back into the owning Brandlight notes before the
 demo is treated as complete.
 
-Sources: adapted from Finfrax `ADR-001`; Brandlight architecture task artifacts.
+Sources: adapted from prior service architecture practice and accepted
+Brandlight demo decisions.
 
 ## ADR-002: Contract-First Implementation
 
@@ -49,7 +44,7 @@ OpenSpec changes describe proposed behavior before it is implemented. Accepted
 behavior is promoted into `openspec/specs/` only after implementation and
 verification are complete.
 
-Sources: adapted from Finfrax `ADR-002`; `artifacts/contracts/implementation_contract.v1.md`.
+Sources: accepted Brandlight demo decisions.
 
 ## ADR-003: Source Naming Versus Service Identity
 
@@ -95,7 +90,7 @@ Generated folders such as `__pycache__`, `dist`, `.pytest_cache`, and
 `node_modules` are not architecture and must not be documented as application
 boundaries.
 
-Sources: adapted from Finfrax `ADR-003`; `artifacts/spec/architecture_proposal.md`.
+Sources: accepted Brandlight demo architecture.
 
 ## ADR-004: Python Service Layout
 
@@ -129,7 +124,7 @@ Responsibilities:
 Root-level `apps/*.py` business modules are not an approved implementation
 location.
 
-Sources: adapted from Finfrax `ADR-004`; `artifacts/spec/architecture_proposal.md`.
+Sources: accepted Brandlight demo architecture.
 
 ## ADR-005: Shared And Support Package Boundaries
 
@@ -146,7 +141,7 @@ Service business logic does not belong in `apps/shared`.
 If a future `apps/support` package is added, it is non-deployable local/test
 support only. It must not become the normal runtime path for accepted behavior.
 
-Sources: adapted from Finfrax `ADR-005`; Brandlight architecture task artifacts.
+Sources: accepted Brandlight demo architecture.
 
 ## ADR-006: ORM And DTO Boundaries
 
@@ -171,8 +166,7 @@ Raw OpenAI output is untrusted external input. It may be stored as raw evidence,
 but it must not silently become derived insight truth without validation,
 extraction versioning, and a link back to the raw response.
 
-Sources: adapted from Finfrax `ADR-006`; domain steward output for the
-Brandlight architecture task.
+Sources: accepted Brandlight demo architecture.
 
 ## ADR-007: Config-Owned Prompts, Provider Credentials, And Rate Limits
 
@@ -284,8 +278,8 @@ Implementation implications:
   evidence.
 
 Sources: owner decision on 2026-06-16; official Brandlight homepage
-`https://www.brandlight.ai/` reviewed on 2026-06-16; Brandlight architecture
-task artifacts.
+`https://www.brandlight.ai/` reviewed on 2026-06-16; accepted Brandlight demo
+decisions.
 
 ## Deferred Decisions
 

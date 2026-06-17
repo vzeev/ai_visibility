@@ -27,4 +27,3 @@ M2 made configuration durable.
 - `docs/decisions/architecture.md`
 - `contracts/database.sql`
 - `contracts/openapi.yaml`
-- `.ai/repo/tasks/2026.06.16_13.59_m3-visibility-queue-raw-persistence/artifacts/contracts/implementation_contract.v1.md`

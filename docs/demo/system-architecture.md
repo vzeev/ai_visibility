@@ -63,4 +63,3 @@ Config records
 - Rate limits are configurable per provider/model.
 - Automated tests use fake providers or Cypress intercepts, not real OpenAI
   calls.
-

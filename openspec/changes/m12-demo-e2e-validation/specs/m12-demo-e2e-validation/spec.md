@@ -46,4 +46,3 @@ The UI SHALL expose the core demo evidence points without source-code browsing.
 - **WHEN** the operator views Queue, Visibility, and Insights
 - **THEN** run expansion, raw evidence identifiers, idempotency keys, summary
   metrics, and extraction evidence are visible enough to narrate the system.
-

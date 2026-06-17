@@ -28,7 +28,6 @@ derived records.
 
 ## Architecture References
 
-- `.ai/repo/tasks/2026.06.16_08.02_brandlight-visibility-architecture/artifacts/spec/architecture_proposal.md`
 - `apps/visibility_service/app/db/models.py`
 - `apps/visibility_service/app/db/repository.py`
 - `contracts/database.sql`

@@ -2,7 +2,7 @@
 
 ## Contract
 
-- [x] Create M9 task artifacts and implementation contract.
+- [x] Confirm M9 proposal, design, tasks, and spec are in place.
 - [x] Create M9 OpenSpec proposal, design, tasks, and spec delta.
 
 ## Frontend

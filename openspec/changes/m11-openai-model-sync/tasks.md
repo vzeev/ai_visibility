@@ -2,7 +2,7 @@
 
 ## Contract
 
-- [x] Create M11 task artifacts and implementation contract.
+- [x] Confirm M11 proposal, design, tasks, and spec are in place.
 - [x] Create M11 OpenSpec proposal, design, tasks, and spec delta.
 - [x] Update OpenAPI contract.
 

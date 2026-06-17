@@ -2,7 +2,7 @@
 
 ## Contract
 
-- [x] Create M8 task artifacts and implementation contract.
+- [x] Confirm M8 proposal, design, tasks, and spec are in place.
 - [x] Create M8 OpenSpec proposal, design, tasks, and spec delta.
 
 ## Runtime

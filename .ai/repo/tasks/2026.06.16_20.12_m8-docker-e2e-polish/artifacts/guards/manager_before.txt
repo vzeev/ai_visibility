@@ -1,1 +1,0 @@
-?? .ai/repo/tasks/2026.06.16_20.12_m8-docker-e2e-polish/artifacts/guards/manager_before.txt

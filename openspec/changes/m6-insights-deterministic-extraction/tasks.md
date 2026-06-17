@@ -20,4 +20,4 @@
 
 ## Documentation
 
-- [x] Update README/OpenSpec/task artifacts with M6 status and usage notes.
+- [x] Update README and OpenSpec with M6 status and usage notes.

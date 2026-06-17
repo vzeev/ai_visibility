@@ -26,7 +26,6 @@ mockups.
 
 ## References
 
-- `.ai/repo/tasks/2026.06.16_08.02_brandlight-visibility-architecture/artifacts/spec/architecture_proposal.md`
 - `apps/web/src/app/App.tsx`
 - `apps/config_service/app/api/routes.py`
 - `apps/visibility_service/app/api/routes.py`

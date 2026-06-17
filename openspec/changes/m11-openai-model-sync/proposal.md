@@ -18,5 +18,4 @@ The architecture requires a dynamic model registry because OpenAI model availabi
 ## Source Links
 
 - Architecture: `docs/decisions/architecture.md`
-- M10 reconciliation: `.ai/repo/tasks/2026.06.16_21.32_m10-config-authoring-ui/artifacts/reconciliation/final_reconciliation.md`
 - OpenAI API: `GET https://api.openai.com/v1/models`

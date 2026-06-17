@@ -21,4 +21,3 @@ demo scripts, and concise demo docs so the system can be shown confidently.
 - Gives the demo a repeatable validation path.
 - Keeps E2E tests independent of real OpenAI calls.
 - Makes the interview story easier to present without code browsing.
-

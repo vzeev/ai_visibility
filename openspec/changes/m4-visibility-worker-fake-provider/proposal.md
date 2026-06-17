@@ -26,4 +26,3 @@ provider-neutral fake AI adapter.
 - `docs/decisions/architecture.md`
 - `apps/shared/ai/provider.py`
 - `apps/visibility_service/app/db/repository.py`
-- `.ai/repo/tasks/2026.06.16_14.43_m4-visibility-worker-fake-provider/artifacts/contracts/implementation_contract.v1.md`

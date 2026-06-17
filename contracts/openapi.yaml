@@ -334,6 +334,29 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ModelRegistry"
+  /api/v1/models/{model_registry_id}/visibility:
+    patch:
+      operationId: updateModelVisibility
+      parameters:
+        - name: model_registry_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateModelVisibilityRequest"
+      responses:
+        "200":
+          description: Updated model registry entry.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelRegistry"
   /api/v1/providers/{provider_id}/models/sync:
     post:
       operationId: syncProviderModels
@@ -477,6 +500,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/RawResponsePage"
+  /api/v1/raw-responses/{raw_response_id}:
+    get:
+      operationId: getRawResponse
+      parameters:
+        - name: raw_response_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Raw response evidence detail.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RawResponseItem"
   /api/v1/extractions/raw-responses/{raw_response_id}:
     post:
       operationId: extractRawResponse
@@ -902,6 +942,12 @@ components:
         capability_json:
           type: object
           additionalProperties: true
+    UpdateModelVisibilityRequest:
+      type: object
+      required: [enabled_for_visibility]
+      properties:
+        enabled_for_visibility:
+          type: boolean
     ModelSyncResponse:
       type: object
       required:
@@ -1226,7 +1272,7 @@ components:
           $ref: "#/components/schemas/VisibilitySummary"
     VisibilitySummary:
       type: object
-      required: [id, brand_id, run_batch_id, extraction_version, summary_json]
+      required: [id, brand_id, run_batch_id, extraction_version, summary_json, created_at]
       properties:
         id:
           type: string
@@ -1242,3 +1288,6 @@ components:
         summary_json:
           type: object
           additionalProperties: true
+        created_at:
+          type: string
+          format: date-time

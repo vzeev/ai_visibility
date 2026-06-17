@@ -1,355 +1,150 @@
-# AI Visibility Demo
+# Brandlight AI Visibility Demo
 
-AI Visibility Demo is a local interview-ready product skeleton for exploring how
-brands appear in AI-generated answers.
+AI Visibility Demo is an interview-ready product skeleton for showing how an
+enterprise brand can measure and explain its visibility inside AI-generated
+answers.
 
-The project is intentionally contract-first:
+The core idea is evidence-first: configuration defines what to measure, the
+worker collects raw AI responses asynchronously, and the insights service derives
+repeatable metrics that link back to the original raw evidence.
 
-- `docs/decisions/architecture.md` records accepted architecture decisions.
-- `contracts/` records API, database, and enum contracts.
-- `openspec/` records proposed and accepted behavior specs.
-- `apps/` contains backend services, worker code, shared helpers, and the web UI.
+## Architecture
 
-## Target Local Shape
+```mermaid
+flowchart LR
+  UI[React Vite UI] --> Config[Config Service]
+  UI --> Visibility[Visibility Service]
+  UI --> Insights[Insights Service]
 
-```text
-React/Vite UI
-  -> config-service
-  -> visibility-service
-  -> insights-service
+  Config --> DB[(Postgres)]
+  Visibility --> DB
+  Insights --> DB
 
-visibility-worker
-  -> provider-neutral AI adapter
-  -> Postgres
+  Visibility --> Worker[Visibility Worker]
+  Worker --> Adapter[Provider Adapter]
+  Adapter --> OpenAI[OpenAI API]
+  Adapter --> Fake[Demo Provider]
 ```
 
-## Commands
+## Evidence Pipeline
 
-```bash
+```mermaid
+flowchart LR
+  C[Config: brand, product, prompts, models, rate limits]
+  S[Run snapshot]
+  Q[Queue items]
+  A[AI request]
+  R[Immutable raw response]
+  I[Versioned insights]
+  E[Evidence link back to response]
+
+  C --> S --> Q --> A --> R --> I --> E
+```
+
+## Service Responsibilities
+
+- `config-service` owns brands, products, competitors, prompt versions, provider
+  metadata, model registry entries, credentials metadata, and rate-limit policy.
+- `visibility-service` owns run batches, queue state, run items, raw requests,
+  raw responses, idempotency keys, latency, usage, and model errors.
+- `visibility-worker` claims queued items, applies rate-limit policy, calls the
+  provider-neutral AI adapter, and writes immutable raw evidence.
+- `insights-service` derives versioned mentions, citations, summaries, and
+  evidence links from stored raw responses.
+- `apps/web` provides the React/Vite demo UI: Config, Queue, Visibility, and
+  Insights tabs.
+
+## What The Demo Shows
+
+1. Configure Brandlight, prompt versions, provider metadata, model selection,
+   credentials metadata, and per-model rate limits.
+2. Create a visibility run that expands prompts across enabled models.
+3. Watch queued work move through the visibility worker.
+4. Inspect searchable raw AI responses with request JSON, response JSON, usage,
+   latency, and idempotency keys.
+5. Run deterministic insight extraction and view brand mentions, competitor
+   mentions, citation domains, and evidence links.
+6. Click an insight evidence link and jump directly back to the raw response that
+   supports it.
+
+## Technical Highlights
+
+- Python services with FastAPI, SQLAlchemy, Alembic, Poetry, and Postgres.
+- React/Vite frontend with Cypress E2E validation.
+- Provider-neutral AI adapter boundary for OpenAI and fake/demo providers.
+- UI-configurable prompt versions, provider credentials metadata, model
+  enablement, and rate limits.
+- Idempotent raw response persistence.
+- Versioned deterministic insights linked back to raw evidence.
+- OpenSpec and contract-first docs under `openspec/` and `contracts/`.
+
+## Local Setup
+
+Create local runtime settings from the example file:
+
+```powershell
+copy .env.example .env
+```
+
+Install dependencies:
+
+```powershell
 poetry install
-pre-commit install
-poetry run precommit
-poetry run doctor
-poetry run fix
-poetry run test-all
-poetry run test-unit
-poetry run test-service
-poetry run test-integration
-poetry run check-skeleton
-poetry run demo-e2e
-poetry run demo-check
-poetry run dev
-poetry run web-check
-poetry run web-e2e
-docker compose config
 cd apps/web
 npm install
-npm run build
-npm run cy:run
-npm run test
 ```
 
-When project dependencies are not installed yet, the foundation helper tests can
-also run with `python -m unittest discover tests`.
+Start the full local stack:
 
-Local Python entry points load the repository root `.env` file automatically.
-`.env.example` documents the supported keys and safe local defaults.
-
-Create `.env` from `.env.example` before running local services or the Docker
-worker. Keep provider tokens only in `.env`.
-
-The first foundation slice uses fake AI adapters for tests. Real provider calls
-are added only behind the provider-neutral adapter boundary and must not be used
-by automated tests.
-
-## Pre-Commit
-
-The hook setup mirrors the Finfrax baseline where it fits this repo:
-
-- standard whitespace, merge-conflict, and large-file guards
-- Ruff fix and format
-- Bandit over `apps`, `scripts`, and `alembic`
-- Pyright with the root `pyproject.toml`
-- local skeleton, Python test, and web type-check hooks
-
-## M2 Config Service
-
-Config-service now persists its core configuration APIs through SQLAlchemy
-sessions backed by the `config.*` tables:
-
-- brands, competitors, and products
-- prompt sets, prompts, and prompt versions
-- providers and write-only provider credential metadata
-- provider/model rate-limit policies
-- model registry entries and `enabled_for_visibility`
-
-Provider token values are accepted only as write-only request fields. Responses
-return redacted fingerprints and metadata, not saved token values.
-
-Postgres integration verification is opt-in:
-
-Set `AI_VISIBILITY_TEST_DATABASE_URL` and `AI_VISIBILITY_ALLOW_DB_RESET=true` in
-`.env`, then run:
-
-```bash
-docker compose -f docker-compose.test.yml up -d postgres-test
-poetry run test-integration
-docker compose -f docker-compose.test.yml down
+```powershell
+poetry run dev
 ```
 
-## M3 Visibility Queue And Raw Persistence
+Open the UI:
 
-Visibility-service now owns the first real queue and raw-evidence path:
-
-- `POST /api/v1/runs` creates a run batch from a config snapshot.
-- Run creation expands active prompt versions across enabled visibility models
-  and requested sample count.
-- `GET /api/v1/queue` returns pending, running, succeeded, failed, and
-  throttled counts.
-- `POST /api/v1/queue/claim` claims the next pending/throttled item and sets a
-  lease.
-- `POST /api/v1/queue/items/{run_item_id}/complete` persists a raw response
-  through the provider-neutral response DTO shape.
-- `POST /api/v1/queue/items/{run_item_id}/fail` records model errors and applies
-  retry/throttle/fail transitions.
-- `GET /api/v1/raw-responses` supports text search plus limit/offset
-  pagination.
-
-Raw response completion is idempotent per run item: replaying the same
-completion returns the existing raw evidence row instead of creating a duplicate.
-
-## M4 Visibility Worker Fake Provider
-
-The worker now executes the first bounded queue-processing path:
-
-- `VisibilityRepository.build_ai_request` constructs provider-neutral requests
-  from the run item's immutable config snapshot.
-- `VisibilityWorker.process_one` claims one item, calls an `AIProviderAdapter`,
-  and stores raw evidence through the existing M3 repository path.
-- `VisibilityWorker.process_batch(max_items=...)` processes a bounded number of
-  items and stops early when the queue is empty.
-- The default execution path uses `FakeAIProviderAdapter`; real provider network
-  calls remain out of scope for automated tests.
-- Retryable adapter failures are recorded as model errors and reuse the M3 queue
-  retry/failure state transitions.
-
-Run the worker locally with:
-
-```bash
-poetry run python -m apps.worker.app.main
+```text
+http://127.0.0.1:5173
 ```
 
-## M5 OpenAI Runtime Readiness
+OpenAPI docs:
 
-Real OpenAI execution is now available behind the same provider-neutral adapter
-interface used by the fake provider:
+- Config service: `http://localhost:8001/docs`
+- Visibility service: `http://localhost:8002/docs`
+- Insights service: `http://localhost:8003/docs`
 
-- `OpenAIResponsesAdapter` maps `AIRequest` to `POST /v1/responses` and
-  normalizes response IDs, output text, usage, latency, and raw JSON into
-  `AIResponse`.
-- Runtime tokens are resolved through `EnvironmentCredentialResolver`; missing
-  tokens fail closed as retryable provider errors.
-- Raw request JSON never includes authorization headers or token values.
-- Worker execution checks the configured provider/model rate-limit policy from
-  the run snapshot before calling the adapter.
-- Automated tests use fake credentials and stubbed HTTP transports only.
+## Real OpenAI Mode
 
-Real OpenAI execution is opt-in through `.env`:
+Real OpenAI execution is opt-in. Set these keys in `.env`:
 
 ```dotenv
 ENABLE_OPENAI=true
 OPENAI_API_KEY=...
 ```
 
-Then run the worker:
+The key is read by runtime services from `.env`. It is not committed and should
+not be passed in command-line history.
 
-```bash
-poetry run python -m apps.worker.app.main
-```
+## Validation
 
-Docker Compose keeps provider secrets and local settings out of
-`docker-compose.yml`. Compose reads `.env` for interpolation, while `.env` is
-mounted read-only only into containers that need provider runtime settings:
-`config-service` for model sync and `visibility-worker` for provider calls.
-Ports, image names, and local service URLs are also read from `.env`.
+Useful checks:
 
-```bash
-copy .env.example .env
-poetry run dev
-```
-
-## M6 Insights Deterministic Extraction
-
-Insights-service now turns stored raw visibility responses into versioned,
-evidence-linked derived records:
-
-- `POST /api/v1/extractions/raw-responses/{raw_response_id}` creates or reuses
-  a completed extraction run for one raw response.
-- `POST /api/v1/extractions/run-batches/{run_batch_id}` extracts every raw
-  response in a run batch and stores a versioned visibility summary.
-- `GET /api/v1/extraction-runs/{extraction_run_id}` returns mentions and
-  citations for one extraction run.
-- `GET /api/v1/summaries` returns filterable visibility summaries.
-- Mentions and citations include `raw_response_id`, source, offsets, and snippet
-  evidence in `evidence_json`.
-- Rerunning the same raw response and extraction version is idempotent.
-
-M6 is deterministic only: no LLM extraction, no scheduler, and no React UI work.
-Raw visibility rows remain immutable inputs.
-
-## M7 UI API Dashboard
-
-The React/Vite dashboard is now API-backed instead of static:
-
-- Config tab reads brands, prompt sets, prompts, providers, credentials, rate
-  limits, and models from config-service.
-- Queue tab reads queue counts and run batches from visibility-service and can
-  create a run from selected brand/prompt set.
-- Visibility tab reads raw responses with search, pagination, and detail view.
-- Insights tab reads summaries and extraction-run evidence from insights-service.
-- Every tab includes loading, empty, error, and refresh states for local service
-  development.
-
-Web service URLs can be overridden with Vite variables:
-
-```bash
-VITE_CONFIG_SERVICE_URL=http://localhost:8001
-VITE_VISIBILITY_SERVICE_URL=http://localhost:8002
-VITE_INSIGHTS_SERVICE_URL=http://localhost:8003
-```
-
-Run the dashboard locally:
-
-```bash
-cd apps/web
-npm run dev -- --host 127.0.0.1
-```
-
-## M8 Docker E2E Polish
-
-The repo now has a deterministic end-to-end smoke path for the local demo:
-
-- seeds or reuses Brandlight config, competitors, prompts, fake provider, model,
-  credential metadata, and rate limits
-- creates a visibility run from the active config snapshot
-- processes the run through the fake provider worker
-- persists raw visibility responses
-- runs deterministic insights extraction and writes a summary
-- prints the run IDs and evidence counts as JSON
-
-Start the full local Docker stack, including migrations, backend services,
-polling visibility worker, and frontend:
-
-```bash
-poetry run dev
-```
-
-Run the smoke command against the local Postgres database when you want to seed
-and exercise the demo flow. It uses
-`AI_VISIBILITY_DEMO_DATABASE_URL` from `.env` when present, otherwise it falls
-back to `DATABASE_URL`.
-
-```bash
+```powershell
+poetry run precommit
+poetry run test-unit
+poetry run test-service
+poetry run demo-check
 poetry run demo-e2e
+poetry run web-check
+poetry run web-e2e
 ```
 
-For an already migrated database, skip migrations:
+The Cypress flow uses deterministic API intercepts and does not call OpenAI. The
+backend smoke flow uses the same worker path as the local demo and can run with
+the fake provider or real OpenAI depending on `.env`.
 
-```bash
-poetry run demo-e2e --skip-migrations
-```
+## Demo Guide
 
-The Vite UI can call local backend APIs through default local CORS origins:
+The concise walkthrough lives in [docs/demo/demo.md](docs/demo/demo.md).
 
-```bash
-AI_VISIBILITY_CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
-```
-
-`AI_VISIBILITY_DEMO_FAKE_TOKEN` can be set when you want the demo credential
-metadata to use a specific local fake token value; it is optional and not needed
-for provider execution.
-
-## M9 UI Demo Polish
-
-The dashboard now opens with a live demo overview showing:
-
-- active Brandlight setup
-- latest run status
-- stored raw evidence count
-- extracted mention totals
-
-The Insights tab can trigger deterministic extraction for the latest succeeded
-visibility run with the existing insights-service API. The Visibility tab now
-shows raw response IDs, run item IDs, idempotency keys, request JSON, and
-response JSON for evidence review.
-
-## M10 Config Authoring UI
-
-The Config tab now supports demo-critical configuration writes through existing
-config-service APIs:
-
-- create provider credentials with write-only token input and redacted readback
-- create prompts under existing prompt sets
-- create new active prompt versions without deleting prompt history
-- create provider-level or model-level rate-limit policies
-
-After each successful write, the Config tab refreshes the live configuration
-data. Token values are cleared after credential submission and are never shown in
-the credential list.
-
-## M11 OpenAI Model Sync
-
-Config-service can now discover available OpenAI models and reconcile them into
-the DB-backed model registry:
-
-- `POST /api/v1/providers/{provider_id}/models/sync` calls OpenAI
-  `GET /v1/models` through the shared discovery client.
-- Existing model rows keep local `enabled_for_visibility` and rate-limit
-  assignments.
-- Newly discovered models are available but disabled for visibility until
-  explicitly enabled.
-- Previously known models missing from the provider response are marked
-  unavailable instead of deleted.
-- The Config tab exposes a `Sync OpenAI models` action in the Model limits
-  panel and refreshes registry data after a successful sync.
-- The Config tab also exposes per-model enable/disable controls, so the demo
-  operator can disable fake models and enable the real OpenAI model used by new
-  visibility runs.
-
-Real model sync reads the same repository root `.env` key as runtime execution.
-In Docker, `config-service` receives `.env` as a read-only mount:
-
-```dotenv
-OPENAI_API_KEY=...
-```
-
-## M12 Demo E2E Validation
-
-The repo now includes a demo validation layer for the interview walkthrough:
-
-- `docs/demo/system-architecture.md` for the architecture narrative
-- `docs/demo/technical-implementation.md` for OpenSpec/contracts/testing
-- `docs/demo/main-flow.md` for the live walkthrough
-- Cypress E2E coverage under `apps/web/cypress/e2e/demo.cy.ts`
-- `poetry run demo-check` to validate demo docs/test harness presence and print
-  the walkthrough command sequence
-- `poetry run web-e2e` as the primary Cypress wrapper; use `npm run cy:run`
-  directly only when debugging from `apps/web`
-
-Cypress validates the browser journey with deterministic API intercepts. It does
-not require Docker, Postgres, or real OpenAI calls; the backend smoke path remains
-`poetry run demo-e2e`.
-
-## Design Decisions
-
-Start with [docs/decisions/architecture.md](docs/decisions/architecture.md).
-
-Current accepted highlights:
-
-- Prompts are UI-configurable, versioned DB records.
-- Provider API tokens are UI-configurable but write-only/redacted on read.
-- Rate limits are configurable per provider/model.
-- All AI APIs use the same internal adapter contract.
-- Raw visibility data is idempotent and immutable evidence.
-- The UI should visually align with the official Brandlight site
-  (`https://www.brandlight.ai/`) without copying proprietary assets.
+The architecture decision register lives in
+[docs/decisions/architecture.md](docs/decisions/architecture.md).

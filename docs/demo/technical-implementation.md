@@ -61,4 +61,3 @@ cd apps/web
 npm run build
 npm run cy:run
 ```
-

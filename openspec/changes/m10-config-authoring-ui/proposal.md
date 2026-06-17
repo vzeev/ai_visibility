@@ -25,6 +25,3 @@ The architecture requires configuration to be the source of truth. M7 and M9 mad
 - Auth/RBAC.
 
 ## References
-
-- Architecture: `.ai/repo/tasks/2026.06.16_08.02_brandlight-visibility-architecture/artifacts/spec/architecture_proposal.md`
-- Implementation contract: `.ai/repo/tasks/2026.06.16_21.32_m10-config-authoring-ui/artifacts/contracts/implementation_contract.v1.md`

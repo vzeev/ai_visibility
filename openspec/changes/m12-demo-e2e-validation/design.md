@@ -33,4 +33,3 @@ Only add polish that improves demo evidence:
 - compact run expansion/execution summary
 - clear deterministic extraction labels
 - raw response evidence remains central
-
