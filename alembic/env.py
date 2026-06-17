@@ -6,6 +6,7 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+from apps.shared.runtime.env import bootstrap_repo_env
 
 config = context.config
 
@@ -16,6 +17,7 @@ target_metadata = None
 
 
 def database_url() -> str:
+    bootstrap_repo_env()
     return os.environ.get(
         "DATABASE_URL",
         config.get_main_option("sqlalchemy.url", ""),

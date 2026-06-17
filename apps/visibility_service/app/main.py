@@ -4,8 +4,11 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 
 from apps.shared.http.cors import add_cors_middleware
+from apps.shared.runtime.env import bootstrap_repo_env
 from apps.visibility_service.app.api.routes import router
 from apps.visibility_service.app.db.repository import ConflictError, NotFoundError
+
+bootstrap_repo_env()
 
 SERVICE_NAME = "visibility-service"
 

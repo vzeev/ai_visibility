@@ -67,6 +67,16 @@ export type ModelRegistry = {
   capability_json: Record<string, unknown>;
 };
 
+export type ModelSyncResponse = {
+  provider_id: string;
+  provider_key: string;
+  discovered_count: number;
+  created_count: number;
+  updated_count: number;
+  unavailable_count: number;
+  models: ModelRegistry[];
+};
+
 export type RunBatch = {
   id: string;
   brand_id: string;
@@ -174,6 +184,8 @@ export const configApi = {
   credentials: () => getJson<ProviderCredential[]>(configBaseUrl, "/api/v1/provider-credentials"),
   rateLimits: () => getJson<RateLimitPolicy[]>(configBaseUrl, "/api/v1/rate-limits"),
   models: () => getJson<ModelRegistry[]>(configBaseUrl, "/api/v1/models"),
+  syncModels: (providerId: string) =>
+    postJson<ModelSyncResponse>(configBaseUrl, `/api/v1/providers/${providerId}/models/sync`, {}),
   createCredential: (payload: { provider_id: string; label: string; token: string }) =>
     postJson<ProviderCredential>(configBaseUrl, "/api/v1/provider-credentials", payload),
   createPrompt: (payload: {

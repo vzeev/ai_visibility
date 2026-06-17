@@ -162,3 +162,13 @@ class CreateModelRegistryRequest(BaseModel):
     enabled_for_visibility: bool = False
     rate_limit_policy_id: UUID | None = None
     capability_json: dict[str, Any] = Field(default_factory=dict)
+
+
+class ModelSyncResponse(BaseModel):
+    provider_id: UUID
+    provider_key: str
+    discovered_count: int
+    created_count: int
+    updated_count: int
+    unavailable_count: int
+    models: list[ModelRegistry]

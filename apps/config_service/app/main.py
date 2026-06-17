@@ -6,6 +6,9 @@ from fastapi.responses import JSONResponse
 from apps.config_service.app.api.routes import router
 from apps.config_service.app.db.repository import ConflictError, NotFoundError
 from apps.shared.http.cors import add_cors_middleware
+from apps.shared.runtime.env import bootstrap_repo_env
+
+bootstrap_repo_env()
 
 SERVICE_NAME = "config-service"
 

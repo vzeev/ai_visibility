@@ -42,4 +42,3 @@ The Config tab SHALL let an operator create provider-level or model-level rate-l
 - WHEN the operator submits provider, optional model id, request, token, delay, retry, and backoff settings
 - THEN config-service creates the rate-limit policy
 - AND the UI refreshes the policy count and model-limit area.
-

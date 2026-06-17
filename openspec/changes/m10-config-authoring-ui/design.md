@@ -25,4 +25,3 @@ Keep Config as an operational setup surface. Add compact authoring panels beside
 ## Verification
 
 Run static web checks, production build, precommit hooks, and service tests. Browser validation is desirable but may remain blocked by the local Browser plugin runtime.
-

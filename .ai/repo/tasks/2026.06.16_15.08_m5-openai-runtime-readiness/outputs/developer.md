@@ -8,7 +8,7 @@
   metadata.
 - Extended visibility config snapshots with provider/model rate-limit policy.
 - Updated worker execution to check rate limits before adapter calls.
-- Added opt-in OpenAI worker mode through `AI_VISIBILITY_ENABLE_OPENAI`.
+- Added opt-in OpenAI worker mode through `ENABLE_OPENAI`.
 - Added offline unit tests and worker service tests.
 - Updated README, `.env.example`, skeleton checks, and OpenSpec tasks.
 

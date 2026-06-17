@@ -18,12 +18,7 @@ class ProviderCredentialResolver(Protocol):
 
 
 def _default_env_names() -> dict[str, tuple[str, ...]]:
-    return {
-        "openai": (
-            "AI_VISIBILITY_OPENAI_API_KEY",
-            "OPENAI_API_KEY",
-        )
-    }
+    return {"openai": ("OPENAI_API_KEY",)}
 
 
 @dataclass(frozen=True)

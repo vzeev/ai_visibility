@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import os
 
+from apps.shared.runtime.env import bootstrap_repo_env, find_repo_env
 from apps.visibility_service.app.db.session import get_session_factory
 from apps.worker.app.visibility_worker import VisibilityWorker
 
@@ -25,7 +26,8 @@ def _max_items_from_env() -> int:
 
 
 def _worker_from_env() -> VisibilityWorker:
-    if os.environ.get("AI_VISIBILITY_ENABLE_OPENAI", "").lower() in {"1", "true", "yes"}:
+    bootstrap_repo_env(find_repo_env())
+    if os.environ.get("ENABLE_OPENAI", "").lower() in {"1", "true", "yes"}:
         return VisibilityWorker.with_openai_enabled(get_session_factory())
     return VisibilityWorker(get_session_factory())
 

@@ -48,6 +48,12 @@ npm run test
 When project dependencies are not installed yet, the foundation helper tests can
 also run with `python -m unittest discover tests`.
 
+Local Python entry points load the repository root `.env` file automatically.
+`.env.example` documents the supported keys and safe local defaults.
+
+Create `.env` from `.env.example` before running local services or the Docker
+worker. Keep provider tokens only in `.env`.
+
 `poetry run test-servcie` is available as a compatibility alias for
 `poetry run test-service`.
 
@@ -81,9 +87,11 @@ return redacted fingerprints and metadata, not saved token values.
 
 Postgres integration verification is opt-in:
 
+Set `AI_VISIBILITY_TEST_DATABASE_URL` and `AI_VISIBILITY_ALLOW_DB_RESET=true` in
+`.env`, then run:
+
 ```bash
 docker compose -f docker-compose.test.yml up -d postgres-test
-$env:AI_VISIBILITY_TEST_DATABASE_URL="postgresql+psycopg://ai_visibility:ai_visibility_local@localhost:55432/ai_visibility_test"
 poetry run test-integration
 docker compose -f docker-compose.test.yml down
 ```
@@ -145,12 +153,25 @@ interface used by the fake provider:
   the run snapshot before calling the adapter.
 - Automated tests use fake credentials and stubbed HTTP transports only.
 
-Real OpenAI execution is opt-in:
+Real OpenAI execution is opt-in through `.env`:
+
+```dotenv
+ENABLE_OPENAI=true
+OPENAI_API_KEY=...
+```
+
+Then run the worker:
 
 ```bash
-$env:AI_VISIBILITY_ENABLE_OPENAI="true"
-$env:AI_VISIBILITY_OPENAI_API_KEY="..."
 poetry run python -m apps.worker.app.main
+```
+
+The Docker worker mounts `.env` read-only and reads the same runtime keys without
+storing provider secrets in `docker-compose.yml`:
+
+```bash
+copy .env.example .env
+docker compose up visibility-worker
 ```
 
 ## M6 Insights Deterministic Extraction
@@ -218,10 +239,11 @@ Start the local stack:
 docker compose up -d postgres config-service visibility-service insights-service web
 ```
 
-Run the smoke command against the local Postgres database:
+Run the smoke command against the local Postgres database. It uses
+`AI_VISIBILITY_DEMO_DATABASE_URL` from `.env` when present, otherwise it falls
+back to `DATABASE_URL`.
 
 ```bash
-$env:AI_VISIBILITY_DEMO_DATABASE_URL="postgresql+psycopg://ai_visibility:ai_visibility_local@localhost:5432/ai_visibility"
 poetry run demo-e2e
 ```
 
@@ -268,6 +290,28 @@ config-service APIs:
 After each successful write, the Config tab refreshes the live configuration
 data. Token values are cleared after credential submission and are never shown in
 the credential list.
+
+## M11 OpenAI Model Sync
+
+Config-service can now discover available OpenAI models and reconcile them into
+the DB-backed model registry:
+
+- `POST /api/v1/providers/{provider_id}/models/sync` calls OpenAI
+  `GET /v1/models` through the shared discovery client.
+- Existing model rows keep local `enabled_for_visibility` and rate-limit
+  assignments.
+- Newly discovered models are available but disabled for visibility until
+  explicitly enabled.
+- Previously known models missing from the provider response are marked
+  unavailable instead of deleted.
+- The Config tab exposes a `Sync OpenAI models` action in the Model limits
+  panel and refreshes registry data after a successful sync.
+
+Real model sync reads the same repository root `.env` key as runtime execution:
+
+```dotenv
+OPENAI_API_KEY=...
+```
 
 ## Design Decisions
 

@@ -11,9 +11,11 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from apps.config_service.app.api.routes import get_model_discovery_client
 from apps.config_service.app.db import models
 from apps.config_service.app.db.session import get_session
 from apps.config_service.app.main import create_app
+from apps.shared.ai.model_discovery import DiscoveredModel
 
 
 class ConfigServiceApiTests(unittest.TestCase):
@@ -25,17 +27,18 @@ class ConfigServiceApiTests(unittest.TestCase):
             autoflush=False,
             expire_on_commit=False,
         )
-        app = create_app()
+        self.app = create_app()
 
         def override_session() -> Iterator[Session]:
             with self.session_factory() as session:
                 yield session
 
-        app.dependency_overrides[get_session] = override_session
-        self.client: Any = TestClient(app)
+        self.app.dependency_overrides[get_session] = override_session
+        self.client: Any = TestClient(self.app)
 
     def tearDown(self) -> None:
         self.client.close()
+        self.app.dependency_overrides.clear()
         self.engine.dispose()
 
     def test_brand_competitor_and_product_are_persisted(self) -> None:
@@ -166,6 +169,81 @@ class ConfigServiceApiTests(unittest.TestCase):
         self.assertTrue(models_payload[0]["enabled_for_visibility"])
         self.assertEqual({"responses": True}, models_payload[0]["capability_json"])
 
+    def test_model_sync_preserves_local_settings_and_marks_unavailable(self) -> None:
+        provider = self._create_provider("openai")
+        rate_limit_response = self._post(
+            "/api/v1/rate-limits",
+            json={
+                "provider_id": provider["id"],
+                "model_id": "gpt-existing",
+                "max_concurrent_requests": 1,
+                "requests_per_minute": 10,
+            },
+        )
+        self.assertEqual(201, rate_limit_response.status_code)
+        rate_limit = _dict_payload(rate_limit_response)
+        existing_response = self._post(
+            "/api/v1/models",
+            json={
+                "provider_id": provider["id"],
+                "model_id": "gpt-existing",
+                "display_name": "Old display name",
+                "owned_by": "old-owner",
+                "is_available": True,
+                "enabled_for_visibility": True,
+                "rate_limit_policy_id": rate_limit["id"],
+                "capability_json": {"old": True},
+            },
+        )
+        self.assertEqual(201, existing_response.status_code)
+        stale_response = self._post(
+            "/api/v1/models",
+            json={
+                "provider_id": provider["id"],
+                "model_id": "gpt-stale",
+                "display_name": "Stale",
+                "is_available": True,
+                "enabled_for_visibility": True,
+                "capability_json": {},
+            },
+        )
+        self.assertEqual(201, stale_response.status_code)
+
+        fake_discovery = _FakeModelDiscoveryClient(
+            [
+                DiscoveredModel(
+                    model_id="gpt-existing",
+                    display_name="gpt-existing",
+                    owned_by="openai",
+                    capability_json={"source": "test"},
+                ),
+                DiscoveredModel(
+                    model_id="gpt-new",
+                    display_name="gpt-new",
+                    owned_by="openai",
+                    capability_json={"source": "test"},
+                ),
+            ]
+        )
+        self.app.dependency_overrides[get_model_discovery_client] = lambda: fake_discovery
+
+        sync_response = self._post(f"/api/v1/providers/{provider['id']}/models/sync", json={})
+
+        self.assertEqual(200, sync_response.status_code)
+        payload = _dict_payload(sync_response)
+        self.assertEqual("openai", fake_discovery.provider_key)
+        self.assertEqual(2, payload["discovered_count"])
+        self.assertEqual(1, payload["created_count"])
+        self.assertEqual(1, payload["updated_count"])
+        self.assertEqual(1, payload["unavailable_count"])
+        by_model_id = {model["model_id"]: model for model in payload["models"]}
+        self.assertTrue(by_model_id["gpt-existing"]["enabled_for_visibility"])
+        self.assertEqual(rate_limit["id"], by_model_id["gpt-existing"]["rate_limit_policy_id"])
+        self.assertEqual("openai", by_model_id["gpt-existing"]["owned_by"])
+        self.assertFalse(by_model_id["gpt-new"]["enabled_for_visibility"])
+        self.assertTrue(by_model_id["gpt-new"]["is_available"])
+        self.assertFalse(by_model_id["gpt-stale"]["is_available"])
+
     def _create_brand(self, name: str) -> dict[str, Any]:
         response = self._post(
             "/api/v1/brands",
@@ -226,3 +304,13 @@ def _dict_payload(response: Response) -> dict[str, Any]:
 
 def _list_payload(response: Response) -> list[dict[str, Any]]:
     return cast(list[dict[str, Any]], response.json())
+
+
+class _FakeModelDiscoveryClient:
+    def __init__(self, models: list[DiscoveredModel]) -> None:
+        self._models = models
+        self.provider_key: str | None = None
+
+    async def list_models(self, provider_key: str) -> list[DiscoveredModel]:
+        self.provider_key = provider_key
+        return self._models

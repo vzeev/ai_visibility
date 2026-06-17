@@ -36,9 +36,11 @@ REQUIRED_PATHS = [
     "apps/shared/ai/provider.py",
     "apps/shared/ai/credentials.py",
     "apps/shared/ai/idempotency.py",
+    "apps/shared/ai/model_discovery.py",
     "apps/shared/ai/openai_provider.py",
     "apps/shared/ai/rate_limits.py",
     "apps/shared/http/cors.py",
+    "apps/shared/runtime/env.py",
     "apps/shared/ai/secrets.py",
     "apps/worker/app/visibility_worker.py",
     "apps/web/package.json",
@@ -61,7 +63,11 @@ REQUIRED_PATHS = [
     "tests/integration/test_visibility_worker_postgres.py",
     "tests/integration/test_insights_service_postgres.py",
     "tests/unit/test_insights_extractor.py",
+    "tests/unit/test_db_reset_safety.py",
     "tests/unit/test_openai_provider_adapter.py",
+    "tests/unit/test_openai_model_discovery.py",
+    "tests/unit/test_runtime_env.py",
+    "tests/unit/test_worker_runtime.py",
     "openspec/changes/m2-db-backed-config-service/specs/m2-db-backed-config-service/spec.md",
     "openspec/changes/m3-visibility-queue-raw-persistence/specs/m3-visibility-queue-raw-persistence/spec.md",
     "openspec/changes/m4-visibility-worker-fake-provider/specs/m4-visibility-worker-fake-provider/spec.md",
@@ -71,6 +77,7 @@ REQUIRED_PATHS = [
     "openspec/changes/m8-docker-e2e-polish/specs/m8-docker-e2e-polish/spec.md",
     "openspec/changes/m9-ui-demo-polish/specs/m9-ui-demo-polish/spec.md",
     "openspec/changes/m10-config-authoring-ui/specs/m10-config-authoring-ui/spec.md",
+    "openspec/changes/m11-openai-model-sync/specs/m11-openai-model-sync/spec.md",
 ]
 
 REQUIRED_MARKERS = {
@@ -110,6 +117,8 @@ REQUIRED_MARKERS = {
         "writeOnly: true",
         "/api/v1/rate-limits:",
         "/api/v1/models:",
+        "/api/v1/providers/{provider_id}/models/sync:",
+        "ModelSyncResponse:",
         "/api/v1/queue/claim:",
         "/api/v1/queue/items/{run_item_id}/complete:",
         "RawResponseItem:",
@@ -123,6 +132,12 @@ REQUIRED_MARKERS = {
         "create_provider_credential",
         "create_prompt_version",
         "create_rate_limit",
+        "sync_models",
+    ],
+    "apps/config_service/app/api/routes.py": [
+        "/providers/{provider_id}/models/sync",
+        "get_model_discovery_client",
+        "ModelSyncResponse",
     ],
     "apps/visibility_service/app/db/repository.py": [
         "class VisibilityRepository",
@@ -140,6 +155,12 @@ REQUIRED_MARKERS = {
         "class EnvironmentCredentialResolver",
         "class StaticCredentialResolver",
         "MissingProviderCredentialError",
+    ],
+    "apps/shared/ai/model_discovery.py": [
+        "class OpenAIModelDiscoveryClient",
+        "OPENAI_MODELS_ENDPOINT",
+        "class DiscoveredModel",
+        "ModelDiscoveryError",
     ],
     "apps/shared/ai/openai_provider.py": [
         "class OpenAIResponsesAdapter",
@@ -161,6 +182,13 @@ REQUIRED_MARKERS = {
         "AI_VISIBILITY_CORS_ORIGINS",
         "CORSMiddleware",
         "http://localhost:5173",
+    ],
+    "apps/shared/runtime/env.py": [
+        "bootstrap_repo_env",
+        "load_repo_env",
+        "find_repo_env",
+        "DEFAULT_REPO_ENV_KEYS",
+        "_parse_dotenv_lines",
     ],
     "docker-compose.yml": [
         "VITE_CONFIG_SERVICE_URL",
@@ -214,6 +242,8 @@ REQUIRED_MARKERS = {
         "createCredential",
         "createPromptVersion",
         "createRateLimit",
+        "syncModels",
+        "ModelSyncResponse",
     ],
     "apps/web/src/features/overview/DemoOverview.tsx": [
         "Demo brand",
@@ -230,6 +260,7 @@ REQUIRED_MARKERS = {
         "Create prompt",
         "Activate new version",
         "Create rate limit",
+        "Sync OpenAI models",
     ],
     "apps/web/src/features/queue/QueuePanel.tsx": [
         "visibilityApi.createRun",

@@ -20,6 +20,7 @@ from apps.insights_service.app.db.repository import InsightsRepository
 from apps.insights_service.app.domain.extractor import DEFAULT_EXTRACTION_VERSION
 from apps.shared.ai.provider import FakeAIProviderAdapter
 from apps.shared.db.runtime import get_database_url
+from apps.shared.runtime.env import bootstrap_repo_env
 from apps.visibility_service.app.db.repository import VisibilityRepository
 from apps.worker.app.visibility_worker import VisibilityWorker
 
@@ -68,6 +69,7 @@ class DemoSmokeResult:
 
 
 def database_url_from_env() -> str:
+    bootstrap_repo_env()
     return os.environ.get(DEMO_DATABASE_URL_ENV) or get_database_url()
 
 
@@ -383,9 +385,9 @@ def _get_or_create_provider_credential(
         .where(config_models.ProviderCredential.label == label)
     )
     if credential is None:
-        demo_token = os.environ.get(
-            "AI_VISIBILITY_DEMO_FAKE_TOKEN",
-            f"fake-local-token-{provider_id.hex}",
+        bootstrap_repo_env()
+        demo_token = os.environ.get("AI_VISIBILITY_DEMO_FAKE_TOKEN") or (
+            f"fake-local-token-{provider_id.hex}"
         )
         return repository.create_provider_credential(
             provider_id=provider_id,

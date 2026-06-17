@@ -64,8 +64,7 @@ automated tests deterministic and offline.
 
 - Existing M2 config tables and M4 worker path.
 - Official OpenAI Responses API schema for request/response mapping.
-- Runtime real OpenAI calls require an environment token such as
-  `OPENAI_API_KEY` or `AI_VISIBILITY_OPENAI_API_KEY`.
+- Runtime real OpenAI calls require an environment token in `OPENAI_API_KEY`.
 
 ## Risks And Likely Failure Modes
 

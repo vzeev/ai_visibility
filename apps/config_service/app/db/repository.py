@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from apps.config_service.app.db import models
 from apps.config_service.app.services.secrets import build_local_secret_ref
+from apps.shared.ai.model_discovery import DiscoveredModel
 from apps.shared.ai.secrets import redacted_fingerprint
 
 
@@ -29,6 +30,14 @@ class ConflictError(ConfigRepositoryError):
 class PromptRecord:
     prompt: models.Prompt
     active_version: models.PromptVersion
+
+
+@dataclass(frozen=True)
+class ModelSyncResult:
+    created_count: int
+    updated_count: int
+    unavailable_count: int
+    models: list[models.ModelRegistry]
 
 
 class ConfigRepository:
@@ -170,6 +179,9 @@ class ConfigRepository:
     def list_providers(self) -> list[models.Provider]:
         return self._list(select(models.Provider).order_by(models.Provider.provider_key))
 
+    def get_provider(self, provider_id: UUID) -> models.Provider:
+        return self._require_provider(provider_id)
+
     def create_provider(
         self,
         *,
@@ -288,6 +300,60 @@ class ConfigRepository:
             capability_json=capability_json,
         )
         return self._add_one(model, conflict_message=f"model already exists: {model_id}")
+
+    def sync_models(
+        self,
+        *,
+        provider_id: UUID,
+        discovered_models: list[DiscoveredModel],
+    ) -> ModelSyncResult:
+        self._require_provider(provider_id)
+        existing_models = self._list(
+            select(models.ModelRegistry).where(models.ModelRegistry.provider_id == provider_id)
+        )
+        existing_by_model_id = {model.model_id: model for model in existing_models}
+        discovered_by_model_id = {model.model_id: model for model in discovered_models}
+
+        created_count = 0
+        updated_count = 0
+        unavailable_count = 0
+
+        for discovered in discovered_by_model_id.values():
+            existing = existing_by_model_id.get(discovered.model_id)
+            if existing is None:
+                self._session.add(
+                    models.ModelRegistry(
+                        provider_id=provider_id,
+                        model_id=discovered.model_id,
+                        display_name=discovered.display_name,
+                        owned_by=discovered.owned_by,
+                        is_available=True,
+                        enabled_for_visibility=False,
+                        rate_limit_policy_id=None,
+                        capability_json=discovered.capability_json,
+                    )
+                )
+                created_count += 1
+                continue
+
+            existing.display_name = discovered.display_name
+            existing.owned_by = discovered.owned_by
+            existing.is_available = True
+            existing.capability_json = discovered.capability_json
+            updated_count += 1
+
+        for existing in existing_models:
+            if existing.model_id not in discovered_by_model_id and existing.is_available:
+                existing.is_available = False
+                unavailable_count += 1
+
+        self._commit()
+        return ModelSyncResult(
+            created_count=created_count,
+            updated_count=updated_count,
+            unavailable_count=unavailable_count,
+            models=self.list_models(provider_id),
+        )
 
     def _require_brand(self, brand_id: UUID) -> models.Brand:
         return self._require(models.Brand, brand_id, "brand not found")

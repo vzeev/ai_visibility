@@ -14,15 +14,19 @@ from alembic import command
 from apps.config_service.app.db import models as config_models
 from apps.insights_service.app.db import models as insights_models
 from apps.insights_service.app.db.repository import InsightsRepository
+from apps.shared.runtime.env import bootstrap_repo_env
 from apps.visibility_service.app.db import models as visibility_models
-from tests.integration.db_helpers import reset_postgres_schema
+from tests.integration.db_helpers import db_reset_allowed, reset_postgres_schema
 
+bootstrap_repo_env()
 TEST_DATABASE_URL = os.environ.get("AI_VISIBILITY_TEST_DATABASE_URL")
+RESET_ALLOWED = db_reset_allowed()
 
 
 @unittest.skipUnless(
-    TEST_DATABASE_URL,
-    "set AI_VISIBILITY_TEST_DATABASE_URL to run Postgres integration tests",
+    TEST_DATABASE_URL and RESET_ALLOWED,
+    "set AI_VISIBILITY_TEST_DATABASE_URL and AI_VISIBILITY_ALLOW_DB_RESET=true "
+    "to run Postgres integration tests",
 )
 class InsightsServicePostgresIntegrationTests(unittest.TestCase):
     def test_extracts_summary_with_alembic_schema(self) -> None:

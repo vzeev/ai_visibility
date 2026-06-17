@@ -334,6 +334,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ModelRegistry"
+  /api/v1/providers/{provider_id}/models/sync:
+    post:
+      operationId: syncProviderModels
+      parameters:
+        - name: provider_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Provider model registry sync result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModelSyncResponse"
   /api/v1/runs:
     post:
       operationId: createVisibilityRun
@@ -885,6 +902,34 @@ components:
         capability_json:
           type: object
           additionalProperties: true
+    ModelSyncResponse:
+      type: object
+      required:
+        - provider_id
+        - provider_key
+        - discovered_count
+        - created_count
+        - updated_count
+        - unavailable_count
+        - models
+      properties:
+        provider_id:
+          type: string
+          format: uuid
+        provider_key:
+          type: string
+        discovered_count:
+          type: integer
+        created_count:
+          type: integer
+        updated_count:
+          type: integer
+        unavailable_count:
+          type: integer
+        models:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModelRegistry"
     RunBatch:
       type: object
       required: [id, brand_id, prompt_set_id, status]

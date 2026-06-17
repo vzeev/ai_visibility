@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from apps.config_service.app.db.repository import ConfigRepository, PromptRecord
@@ -21,6 +21,7 @@ from apps.config_service.app.schemas.http import (
     CreateProviderRequest,
     CreateRateLimitPolicyRequest,
     ModelRegistry,
+    ModelSyncResponse,
     Product,
     Prompt,
     PromptSet,
@@ -29,12 +30,21 @@ from apps.config_service.app.schemas.http import (
     ProviderCredential,
     RateLimitPolicyResponse,
 )
+from apps.shared.ai.model_discovery import (
+    ModelDiscoveryClient,
+    ModelDiscoveryError,
+    OpenAIModelDiscoveryClient,
+)
 
 router = APIRouter()
 
 
 def get_repository(session: Session = Depends(get_session)) -> ConfigRepository:
     return ConfigRepository(session)
+
+
+def get_model_discovery_client() -> ModelDiscoveryClient:
+    return OpenAIModelDiscoveryClient()
 
 
 @router.get("/brands", response_model=list[Brand])
@@ -269,6 +279,36 @@ def create_model(
         capability_json=payload.capability_json,
     )
     return ModelRegistry.model_validate(model)
+
+
+@router.post("/providers/{provider_id}/models/sync", response_model=ModelSyncResponse)
+async def sync_provider_models(
+    provider_id: UUID,
+    repository: ConfigRepository = Depends(get_repository),
+    discovery_client: ModelDiscoveryClient = Depends(get_model_discovery_client),
+) -> ModelSyncResponse:
+    provider = repository.get_provider(provider_id)
+    try:
+        discovered_models = await discovery_client.list_models(provider.provider_key)
+    except ModelDiscoveryError as error:
+        status_code = (
+            status.HTTP_503_SERVICE_UNAVAILABLE if error.retryable else status.HTTP_400_BAD_REQUEST
+        )
+        raise HTTPException(status_code=status_code, detail=str(error)) from error
+
+    result = repository.sync_models(
+        provider_id=provider_id,
+        discovered_models=discovered_models,
+    )
+    return ModelSyncResponse(
+        provider_id=provider.id,
+        provider_key=provider.provider_key,
+        discovered_count=len(discovered_models),
+        created_count=result.created_count,
+        updated_count=result.updated_count,
+        unavailable_count=result.unavailable_count,
+        models=[ModelRegistry.model_validate(model) for model in result.models],
+    )
 
 
 def _prompt_response(record: PromptRecord) -> Prompt:

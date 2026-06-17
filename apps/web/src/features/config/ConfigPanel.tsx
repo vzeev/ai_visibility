@@ -10,7 +10,7 @@ import {
 } from "../../lib/api";
 import { useAsyncData } from "../../lib/useAsyncData";
 
-type FormKey = "credential" | "prompt" | "version" | "rateLimit";
+type FormKey = "credential" | "prompt" | "version" | "rateLimit" | "modelSync";
 
 type FormMessage = {
   form: FormKey;
@@ -95,6 +95,9 @@ export function ConfigPanel() {
   const selectedPromptId = versionForm.promptId || data.prompts[0]?.id || "";
   const selectedRateLimitProviderId =
     rateLimitForm.providerId || data.providers[0]?.id || "";
+  const selectedOpenAiProvider = data.providers.find(
+    (provider) => provider.provider_key === "openai"
+  );
 
   async function submitCredential(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -229,6 +232,33 @@ export function ConfigPanel() {
       await state.reload();
     } catch (error) {
       setFormMessage({ form: "rateLimit", kind: "error", text: errorText(error) });
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  async function syncOpenAiModels() {
+    if (!selectedOpenAiProvider) {
+      setFormMessage({
+        form: "modelSync",
+        kind: "error",
+        text: "OpenAI provider is not configured."
+      });
+      return;
+    }
+
+    setSaving("modelSync");
+    setFormMessage(null);
+    try {
+      const result = await configApi.syncModels(selectedOpenAiProvider.id);
+      setFormMessage({
+        form: "modelSync",
+        kind: "success",
+        text: `Synced ${result.discovered_count} models. Created ${result.created_count}, updated ${result.updated_count}, unavailable ${result.unavailable_count}.`
+      });
+      await state.reload();
+    } catch (error) {
+      setFormMessage({ form: "modelSync", kind: "error", text: errorText(error) });
     } finally {
       setSaving(null);
     }
@@ -608,7 +638,15 @@ export function ConfigPanel() {
       <div className="panel">
         <div className="panel-header">
           <h2>Model limits</h2>
+          <button
+            type="button"
+            disabled={!selectedOpenAiProvider || saving === "modelSync"}
+            onClick={() => void syncOpenAiModels()}
+          >
+            {saving === "modelSync" ? "Syncing" : "Sync OpenAI models"}
+          </button>
         </div>
+        <FormMessageView message={formMessage} form="modelSync" />
         <div className="model-list">
           {data.models.map((model) => (
             <div className="model-row" key={model.id}>

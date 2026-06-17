@@ -16,14 +16,18 @@ from sqlalchemy.orm import Session, sessionmaker
 from alembic import command
 from apps.config_service.app.db.session import get_session
 from apps.config_service.app.main import create_app
-from tests.integration.db_helpers import reset_postgres_schema
+from apps.shared.runtime.env import bootstrap_repo_env
+from tests.integration.db_helpers import db_reset_allowed, reset_postgres_schema
 
+bootstrap_repo_env()
 TEST_DATABASE_URL = os.environ.get("AI_VISIBILITY_TEST_DATABASE_URL")
+RESET_ALLOWED = db_reset_allowed()
 
 
 @unittest.skipUnless(
-    TEST_DATABASE_URL,
-    "set AI_VISIBILITY_TEST_DATABASE_URL to run Postgres integration tests",
+    TEST_DATABASE_URL and RESET_ALLOWED,
+    "set AI_VISIBILITY_TEST_DATABASE_URL and AI_VISIBILITY_ALLOW_DB_RESET=true "
+    "to run Postgres integration tests",
 )
 class ConfigServicePostgresIntegrationTests(unittest.TestCase):
     def test_alembic_backed_config_service_persists_brand(self) -> None:

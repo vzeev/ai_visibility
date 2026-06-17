@@ -22,7 +22,7 @@ services:
     command: ["uvicorn", "apps.config_service.app.main:app", "--host", "0.0.0.0", "--port", "8001"]
     environment:
       SERVICE_NAME: config-service
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ai_visibility:ai_visibility_local@postgres:5432/ai_visibility}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ai_visibility}:${POSTGRES_PASSWORD:-ai_visibility_local}@postgres:5432/${POSTGRES_DB:-ai_visibility}
       AI_VISIBILITY_CORS_ORIGINS: ${AI_VISIBILITY_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
     ports:
       - "8001:8001"
@@ -37,7 +37,7 @@ services:
     command: ["uvicorn", "apps.visibility_service.app.main:app", "--host", "0.0.0.0", "--port", "8002"]
     environment:
       SERVICE_NAME: visibility-service
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ai_visibility:ai_visibility_local@postgres:5432/ai_visibility}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ai_visibility}:${POSTGRES_PASSWORD:-ai_visibility_local}@postgres:5432/${POSTGRES_DB:-ai_visibility}
       AI_VISIBILITY_CORS_ORIGINS: ${AI_VISIBILITY_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
     ports:
       - "8002:8002"
@@ -52,7 +52,7 @@ services:
     command: ["uvicorn", "apps.insights_service.app.main:app", "--host", "0.0.0.0", "--port", "8003"]
     environment:
       SERVICE_NAME: insights-service
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ai_visibility:ai_visibility_local@postgres:5432/ai_visibility}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ai_visibility}:${POSTGRES_PASSWORD:-ai_visibility_local}@postgres:5432/${POSTGRES_DB:-ai_visibility}
       AI_VISIBILITY_CORS_ORIGINS: ${AI_VISIBILITY_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
     ports:
       - "8003:8003"
@@ -67,8 +67,10 @@ services:
     command: ["python", "-m", "apps.worker.app.main"]
     environment:
       SERVICE_NAME: visibility-worker
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://ai_visibility:ai_visibility_local@postgres:5432/ai_visibility}
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ai_visibility}:${POSTGRES_PASSWORD:-ai_visibility_local}@postgres:5432/${POSTGRES_DB:-ai_visibility}
       WORKER_MAX_ITEMS: ${WORKER_MAX_ITEMS:-25}
+    volumes:
+      - ./.env:/app/.env:ro
     depends_on:
       postgres:
         condition: service_healthy
