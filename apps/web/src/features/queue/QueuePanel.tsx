@@ -40,6 +40,11 @@ export function QueuePanel() {
   const selectedBrandId = brandId || brands[0]?.id || "";
   const promptSetsForBrand = promptSets.filter((set) => set.brand_id === selectedBrandId);
   const selectedPromptSetId = promptSetId || promptSetsForBrand[0]?.id || promptSets[0]?.id || "";
+  const promptsForSelectedSet = state.data.prompts.filter(
+    (prompt) => prompt.prompt_set_id === selectedPromptSetId
+  );
+  const enabledModels = state.data.models.filter((model) => model.enabled_for_visibility);
+  const plannedItemCount = promptsForSelectedSet.length * enabledModels.length * sampleCount;
 
   async function createRun() {
     if (!selectedBrandId || !selectedPromptSetId) {
@@ -122,10 +127,21 @@ export function QueuePanel() {
             />
           </label>
           <div className="form-action">
-            <button type="button" disabled={isCreating} onClick={() => void createRun()}>
+            <button
+              type="button"
+              data-cy="create-run"
+              disabled={isCreating}
+              onClick={() => void createRun()}
+            >
               {isCreating ? "Creating" : "Create run"}
             </button>
           </div>
+        </div>
+        <div className="run-expansion" data-cy="queue-run-expansion">
+          <span>{promptsForSelectedSet.length} prompts</span>
+          <span>{enabledModels.length} enabled models</span>
+          <span>{sampleCount} samples</span>
+          <strong>{plannedItemCount} planned queue items</strong>
         </div>
         {createError ? <p className="inline-error">{createError}</p> : null}
       </div>
@@ -146,7 +162,7 @@ export function QueuePanel() {
         </div>
       </div>
 
-      <div className="panel span-3">
+      <div className="panel span-3" data-cy="run-batches">
         <div className="panel-header">
           <h2>Run batches</h2>
         </div>
@@ -193,13 +209,15 @@ function Metric({ label, value }: { label: string; value: number }) {
 }
 
 async function loadQueueData() {
-  const [queue, runs, brands, promptSets] = await Promise.all([
+  const [queue, runs, brands, promptSets, prompts, models] = await Promise.all([
     visibilityApi.queue(),
     visibilityApi.runs(),
     configApi.brands(),
-    configApi.promptSets()
+    configApi.promptSets(),
+    configApi.prompts(),
+    configApi.models()
   ]);
-  return { queue, runs, brands, promptSets };
+  return { queue, runs, brands, promptSets, prompts, models };
 }
 
 function nameById(items: Array<{ id: string; name: string }>, id: string): string {

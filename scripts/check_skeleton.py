@@ -13,6 +13,9 @@ REQUIRED_PATHS = [
     "contracts/openapi.yaml",
     "contracts/database.sql",
     "docs/decisions/architecture.md",
+    "docs/demo/system-architecture.md",
+    "docs/demo/technical-implementation.md",
+    "docs/demo/main-flow.md",
     "openspec/config.yaml",
     "openspec/changes/m1-ai-visibility-demo-foundation/specs/m1-ai-visibility-demo-foundation/spec.md",
     "alembic/alembic.ini",
@@ -44,6 +47,8 @@ REQUIRED_PATHS = [
     "apps/shared/ai/secrets.py",
     "apps/worker/app/visibility_worker.py",
     "apps/web/package.json",
+    "apps/web/cypress.config.ts",
+    "apps/web/cypress/e2e/demo.cy.ts",
     "apps/web/src/app/App.tsx",
     "apps/web/src/components/DataState.tsx",
     "apps/web/src/features/overview/DemoOverview.tsx",
@@ -51,7 +56,9 @@ REQUIRED_PATHS = [
     "apps/web/src/lib/useAsyncData.ts",
     "apps/web/src/vite-env.d.ts",
     "scripts/run_web_check.py",
+    "scripts/run_web_e2e.py",
     "scripts/ai_visibility_tools/cli_tasks.py",
+    "scripts/ai_visibility_tools/demo_check.py",
     "scripts/ai_visibility_tools/demo_e2e.py",
     "tests/services/test_cors.py",
     "tests/services/test_config_service_api.py",
@@ -79,6 +86,7 @@ REQUIRED_PATHS = [
     "openspec/changes/m9-ui-demo-polish/specs/m9-ui-demo-polish/spec.md",
     "openspec/changes/m10-config-authoring-ui/specs/m10-config-authoring-ui/spec.md",
     "openspec/changes/m11-openai-model-sync/specs/m11-openai-model-sync/spec.md",
+    "openspec/changes/m12-demo-e2e-validation/specs/m12-demo-e2e-validation/spec.md",
 ]
 
 REQUIRED_MARKERS = {
@@ -93,14 +101,33 @@ REQUIRED_MARKERS = {
     "pyproject.toml": [
         "pre-commit =",
         "demo-e2e =",
+        "demo-check =",
         "dev =",
         "doctor =",
         "fix =",
         "precommit =",
         "test-integration =",
         "test-service =",
-        "test-servcie =",
+        "web-e2e =",
         "[tool.bandit]",
+    ],
+    "docs/demo/system-architecture.md": [
+        "Config service",
+        "Visibility service",
+        "Insights service",
+        "Data Lineage",
+    ],
+    "docs/demo/technical-implementation.md": [
+        "OpenSpec",
+        "Cypress",
+        "Poetry",
+        "Testing Layers",
+    ],
+    "docs/demo/main-flow.md": [
+        "Config Tab",
+        "Queue Tab",
+        "Visibility Tab",
+        "Insights Tab",
     ],
     "contracts/database.sql": [
         "CREATE TABLE config.prompts",
@@ -244,6 +271,7 @@ REQUIRED_MARKERS = {
         "Visibility",
         "Insights",
         "DemoOverview",
+        "data-cy",
     ],
     "apps/web/src/lib/api.ts": [
         "VITE_CONFIG_SERVICE_URL",
@@ -279,16 +307,43 @@ REQUIRED_MARKERS = {
     "apps/web/src/features/queue/QueuePanel.tsx": [
         "visibilityApi.createRun",
         "Create visibility run",
+        "queue-run-expansion",
     ],
     "apps/web/src/features/visibility/VisibilityPanel.tsx": [
         "visibilityApi.rawResponses",
         "Evidence detail",
         "Idempotency key",
+        "Current-page model comparison",
     ],
     "apps/web/src/features/insights/InsightsPanel.tsx": [
         "insightsApi.summaries",
         "Extraction evidence",
         "Analyze latest run",
+        "Deterministic extraction",
+    ],
+    "apps/web/package.json": [
+        "cy:run",
+        "test:e2e",
+        "cypress",
+    ],
+    "apps/web/cypress.config.ts": [
+        "defineConfig",
+        "specPattern",
+    ],
+    "apps/web/cypress/e2e/demo.cy.ts": [
+        "Brandlight interview demo",
+        "overview-brand",
+        "queue-run-expansion",
+        "raw-response-detail",
+        "extraction-evidence",
+    ],
+    "scripts/ai_visibility_tools/demo_check.py": [
+        "docs/demo/main-flow.md",
+        "Brandlight demo walkthrough commands",
+    ],
+    "scripts/run_web_e2e.py": [
+        "npm",
+        "cy:run",
     ],
     "scripts/ai_visibility_tools/demo_e2e.py": [
         "seed_brandlight_demo",

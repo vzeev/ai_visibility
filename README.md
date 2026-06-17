@@ -18,7 +18,7 @@ React/Vite UI
   -> visibility-service
   -> insights-service
 
-visibility-worker / insights-worker
+visibility-worker
   -> provider-neutral AI adapter
   -> Postgres
 ```
@@ -37,12 +37,15 @@ poetry run test-service
 poetry run test-integration
 poetry run check-skeleton
 poetry run demo-e2e
+poetry run demo-check
 poetry run dev
 poetry run web-check
+poetry run web-e2e
 docker compose config
 cd apps/web
 npm install
 npm run build
+npm run cy:run
 npm run test
 ```
 
@@ -54,9 +57,6 @@ Local Python entry points load the repository root `.env` file automatically.
 
 Create `.env` from `.env.example` before running local services or the Docker
 worker. Keep provider tokens only in `.env`.
-
-`poetry run test-servcie` is available as a compatibility alias for
-`poetry run test-service`.
 
 The first foundation slice uses fake AI adapters for tests. Real provider calls
 are added only behind the provider-neutral adapter boundary and must not be used
@@ -319,6 +319,23 @@ In Docker, `config-service` receives `.env` as a read-only mount:
 ```dotenv
 OPENAI_API_KEY=...
 ```
+
+## M12 Demo E2E Validation
+
+The repo now includes a demo validation layer for the interview walkthrough:
+
+- `docs/demo/system-architecture.md` for the architecture narrative
+- `docs/demo/technical-implementation.md` for OpenSpec/contracts/testing
+- `docs/demo/main-flow.md` for the live walkthrough
+- Cypress E2E coverage under `apps/web/cypress/e2e/demo.cy.ts`
+- `poetry run demo-check` to validate demo docs/test harness presence and print
+  the walkthrough command sequence
+- `poetry run web-e2e` as the primary Cypress wrapper; use `npm run cy:run`
+  directly only when debugging from `apps/web`
+
+Cypress validates the browser journey with deterministic API intercepts. It does
+not require Docker, Postgres, or real OpenAI calls; the backend smoke path remains
+`poetry run demo-e2e`.
 
 ## Design Decisions
 

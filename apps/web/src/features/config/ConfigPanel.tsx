@@ -284,7 +284,7 @@ export function ConfigPanel() {
       </div>
 
       {demoBrand ? (
-        <div className="panel span-3 demo-focus">
+        <div className="panel span-3 demo-focus" data-cy="config-active-setup">
           <div>
             <p className="eyebrow">Active setup</p>
             <h2>{demoBrand.name}</h2>
@@ -307,7 +307,7 @@ export function ConfigPanel() {
         </div>
       ) : null}
 
-      <div className="panel span-3 authoring-panel">
+      <div className="panel span-3 authoring-panel" data-cy="config-authoring">
         <div className="panel-header toolbar-header">
           <div>
             <p className="eyebrow">Config authoring</p>
@@ -640,6 +640,7 @@ export function ConfigPanel() {
           <h2>Model limits</h2>
           <button
             type="button"
+            data-cy="sync-openai-models"
             disabled={!selectedOpenAiProvider || saving === "modelSync"}
             onClick={() => void syncOpenAiModels()}
           >

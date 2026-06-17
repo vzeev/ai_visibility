@@ -77,7 +77,9 @@ export function InsightsPanel() {
       <section className="content-grid">
         <div className="panel span-3 analysis-panel">
           <div>
-            <p className="eyebrow">Deterministic extraction</p>
+            <p className="eyebrow" data-cy="insights-extraction-mode">
+              Deterministic extraction
+            </p>
             <h2>No insights yet</h2>
             <p className="muted">
               {latestSucceededRun
@@ -85,7 +87,12 @@ export function InsightsPanel() {
                 : "No completed visibility run is ready."}
             </p>
           </div>
-          <button type="button" disabled={!latestSucceededRun || isAnalyzing} onClick={() => void analyzeLatestRun()}>
+          <button
+            type="button"
+            data-cy="analyze-latest-run"
+            disabled={!latestSucceededRun || isAnalyzing}
+            onClick={() => void analyzeLatestRun()}
+          >
             {isAnalyzing ? "Analyzing" : "Analyze latest run"}
           </button>
           {analysisError ? <p className="inline-error">{analysisError}</p> : null}
@@ -105,12 +112,16 @@ export function InsightsPanel() {
       <div className="panel span-2">
         <div className="panel-header">
           <div>
+            <p className="eyebrow" data-cy="insights-extraction-mode">
+              Deterministic extraction
+            </p>
             <h2>Visibility summaries</h2>
             <p className="muted">{summaries.length} extraction summaries</p>
           </div>
           <div className="toolbar-controls">
             <button
               type="button"
+              data-cy="analyze-latest-run"
               disabled={!latestSucceededRun || isAnalyzing}
               onClick={() => void analyzeLatestRun()}
             >
@@ -123,7 +134,7 @@ export function InsightsPanel() {
         </div>
         {analysisMessage ? <p className="inline-success">{analysisMessage}</p> : null}
         {analysisError ? <p className="inline-error">{analysisError}</p> : null}
-        <div className="summary-list">
+        <div className="summary-list" data-cy="insights-summary-list">
           {summaries.map((summary) => (
             <button
               className={summary.id === selectedSummary?.id ? "summary-row active" : "summary-row"}
@@ -217,7 +228,7 @@ function ExtractionDetail({ state }: { state: AsyncState<ExtractionRun | null> }
   }
 
   return (
-    <div className="panel span-3">
+    <div className="panel span-3" data-cy="extraction-evidence">
       <div className="panel-header">
         <div>
           <h2>Extraction evidence</h2>

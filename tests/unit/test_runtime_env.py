@@ -6,6 +6,7 @@ import unittest
 from pathlib import Path
 
 from apps.shared.ai.credentials import EnvironmentCredentialResolver
+from apps.shared.db.runtime import get_database_url
 from apps.shared.runtime.env import bootstrap_repo_env, load_repo_env
 
 
@@ -138,6 +139,36 @@ class RuntimeEnvTests(unittest.TestCase):
                 )
             finally:
                 _restore_env("OPENAI_API_KEY", original_openai)
+
+    def test_database_url_fallback_uses_demo_host_port(self) -> None:
+        original_database_url = os.environ.get("DATABASE_URL")
+        original_postgres_port = os.environ.get("POSTGRES_PORT")
+        try:
+            os.environ.pop("DATABASE_URL", None)
+            os.environ.pop("POSTGRES_PORT", None)
+
+            self.assertEqual(
+                "postgresql+psycopg://ai_visibility:ai_visibility_local@localhost:55433/ai_visibility",
+                get_database_url(),
+            )
+        finally:
+            _restore_env("DATABASE_URL", original_database_url)
+            _restore_env("POSTGRES_PORT", original_postgres_port)
+
+    def test_database_url_fallback_uses_postgres_port_override(self) -> None:
+        original_database_url = os.environ.get("DATABASE_URL")
+        original_postgres_port = os.environ.get("POSTGRES_PORT")
+        try:
+            os.environ.pop("DATABASE_URL", None)
+            os.environ["POSTGRES_PORT"] = "55444"
+
+            self.assertEqual(
+                "postgresql+psycopg://ai_visibility:ai_visibility_local@localhost:55444/ai_visibility",
+                get_database_url(),
+            )
+        finally:
+            _restore_env("DATABASE_URL", original_database_url)
+            _restore_env("POSTGRES_PORT", original_postgres_port)
 
 
 def _restore_env(key: str, value: str | None) -> None:

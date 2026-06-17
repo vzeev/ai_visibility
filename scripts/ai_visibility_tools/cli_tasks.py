@@ -86,6 +86,12 @@ def main_demo_e2e() -> int:
     return demo_e2e.main(tuple(sys.argv[1:]))
 
 
+def main_demo_check() -> int:
+    from scripts.ai_visibility_tools import demo_check
+
+    return demo_check.main(tuple(sys.argv[1:]))
+
+
 def main_dev() -> int:
     env_file = REPO_ROOT / ".env"
     if not env_file.is_file():
@@ -199,10 +205,6 @@ def main_test_service() -> int:
     return _run_unittest_discover("tests/services")
 
 
-def main_test_servcie() -> int:
-    return main_test_service()
-
-
 def main_test_integration() -> int:
     return _run_unittest_discover("tests/integration")
 
@@ -230,6 +232,10 @@ def _run_unittest_discover(start_dir: str) -> int:
 
 def main_web_check() -> int:
     return _run((sys.executable, "scripts/run_web_check.py"))
+
+
+def main_web_e2e() -> int:
+    return _run((sys.executable, "scripts/run_web_e2e.py"))
 
 
 def _compose_env(env_file: Path) -> dict[str, str]:

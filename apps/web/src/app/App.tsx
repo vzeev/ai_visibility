@@ -32,6 +32,7 @@ export function App() {
           {tabs.map((tab) => (
             <button
               className={tab.id === activeTab ? "tab-button active" : "tab-button"}
+              data-cy={`tab-${tab.id}`}
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               type="button"

@@ -46,6 +46,7 @@ export function VisibilityPanel() {
 
   const currentPage = Math.floor(offset / PAGE_SIZE) + 1;
   const totalPages = Math.max(1, Math.ceil(page.total / PAGE_SIZE));
+  const modelSummaries = summarizeModels(page.items);
 
   return (
     <section className="content-grid">
@@ -78,7 +79,7 @@ export function VisibilityPanel() {
             description="Adjust the search query or create a visibility run."
           />
         ) : (
-          <div className="raw-list">
+          <div className="raw-list" data-cy="raw-response-list">
             {page.items.map((row) => (
               <button
                 className={row.id === selected?.id ? "raw-row active" : "raw-row"}
@@ -118,6 +119,26 @@ export function VisibilityPanel() {
         </div>
       </div>
 
+      <div className="panel" data-cy="model-comparison">
+        <div className="panel-header">
+          <h2>Current-page model comparison</h2>
+        </div>
+        <div className="record-list">
+          {modelSummaries.map((model) => (
+            <div className="compact-row" key={model.modelId}>
+              <div>
+                <strong>{model.modelId}</strong>
+                <span>{model.count} raw responses</span>
+              </div>
+              <span className="badge neutral">{model.averageLatencyMs}ms avg</span>
+            </div>
+          ))}
+          {modelSummaries.length === 0 ? (
+            <EmptyState title="No model data" description="Create a run to compare model outputs." />
+          ) : null}
+        </div>
+      </div>
+
       <RawResponseDetail item={selected} />
     </section>
   );
@@ -133,7 +154,7 @@ function RawResponseDetail({ item }: { item: RawResponseItem | null }) {
   }
 
   return (
-    <aside className="panel detail-panel">
+    <aside className="panel detail-panel" data-cy="raw-response-detail">
       <div className="panel-header">
         <h2>Evidence detail</h2>
         <span className="badge success">{item.status}</span>
@@ -176,4 +197,20 @@ function RawResponseDetail({ item }: { item: RawResponseItem | null }) {
 
 function jsonPreview(value: Record<string, unknown>): string {
   return JSON.stringify(value, null, 2);
+}
+
+function summarizeModels(items: RawResponseItem[]) {
+  const grouped = new Map<string, { count: number; latency: number }>();
+  for (const item of items) {
+    const current = grouped.get(item.model_id) ?? { count: 0, latency: 0 };
+    grouped.set(item.model_id, {
+      count: current.count + 1,
+      latency: current.latency + item.latency_ms
+    });
+  }
+  return [...grouped.entries()].map(([modelId, value]) => ({
+    modelId,
+    count: value.count,
+    averageLatencyMs: Math.round(value.latency / value.count)
+  }));
 }

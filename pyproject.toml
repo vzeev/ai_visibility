@@ -60,6 +60,7 @@ reportPrivateUsage = false
 [tool.poetry.scripts]
 check-skeleton = "scripts.ai_visibility_tools.cli_tasks:main_check_skeleton"
 demo-e2e = "scripts.ai_visibility_tools.cli_tasks:main_demo_e2e"
+demo-check = "scripts.ai_visibility_tools.cli_tasks:main_demo_check"
 dev = "scripts.ai_visibility_tools.cli_tasks:main_dev"
 doctor = "scripts.ai_visibility_tools.cli_tasks:main_doctor"
 fix = "scripts.ai_visibility_tools.cli_tasks:main_fix"
@@ -67,9 +68,9 @@ precommit = "scripts.ai_visibility_tools.cli_tasks:main_precommit"
 test-all = "scripts.ai_visibility_tools.cli_tasks:main_test_all"
 test-integration = "scripts.ai_visibility_tools.cli_tasks:main_test_integration"
 test-service = "scripts.ai_visibility_tools.cli_tasks:main_test_service"
-test-servcie = "scripts.ai_visibility_tools.cli_tasks:main_test_servcie"
 test-unit = "scripts.ai_visibility_tools.cli_tasks:main_test_unit"
 web-check = "scripts.ai_visibility_tools.cli_tasks:main_web_check"
+web-e2e = "scripts.ai_visibility_tools.cli_tasks:main_web_e2e"
 
 [build-system]
 requires = ["poetry-core>=1.9.0"]

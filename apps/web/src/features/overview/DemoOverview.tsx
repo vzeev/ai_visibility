@@ -38,24 +38,24 @@ export function DemoOverview() {
 
   return (
     <section className="demo-overview" aria-label="Demo readiness">
-      <div className="overview-tile primary">
+      <div className="overview-tile primary" data-cy="overview-brand">
         <span>Demo brand</span>
         <strong>{brandName}</strong>
         <em>
           {promptCount} prompts · {enabledModelCount} models
         </em>
       </div>
-      <div className="overview-tile">
+      <div className="overview-tile" data-cy="overview-latest-run">
         <span>Latest run</span>
         <strong>{latestRun ? latestRun.status : "No runs"}</strong>
         <em>{latestRun ? shortId(latestRun.id) : `${queueActive} active items`}</em>
       </div>
-      <div className="overview-tile">
+      <div className="overview-tile" data-cy="overview-raw-evidence">
         <span>Raw evidence</span>
         <strong>{rawCount}</strong>
         <em>stored responses</em>
       </div>
-      <div className="overview-tile insight">
+      <div className="overview-tile insight" data-cy="overview-insights">
         <span>Insights</span>
         <strong>{brandMentions + competitorMentions}</strong>
         <em>{summary ? `${brandMentions} brand · ${competitorMentions} competitor` : "No summary"}</em>

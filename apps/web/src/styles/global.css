@@ -376,6 +376,32 @@ h3 {
   gap: 14px;
 }
 
+.run-expansion {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-border);
+}
+
+.run-expansion span,
+.run-expansion strong {
+  min-height: 30px;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  background: #f8fbff;
+  color: var(--color-brand-dark);
+  font-size: 13px;
+}
+
+.run-expansion strong {
+  border-color: rgba(27, 103, 255, 0.28);
+  background: #edf6ff;
+}
+
 .authoring-panel {
   display: grid;
   gap: 16px;
