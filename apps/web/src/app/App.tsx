@@ -23,6 +23,16 @@ export function App() {
     setActiveTab("visibility");
   }
 
+  function selectTab(tabId: TabId) {
+    if (tabId === activeTab) {
+      return;
+    }
+    setActiveTab(tabId);
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: "auto" });
+    });
+  }
+
   return (
     <div className="app-shell">
       <aside className="side-rail">
@@ -40,7 +50,7 @@ export function App() {
               className={tab.id === activeTab ? "tab-button active" : "tab-button"}
               data-cy={`tab-${tab.id}`}
               key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => selectTab(tab.id)}
               type="button"
             >
               {tab.label}
@@ -68,12 +78,18 @@ export function App() {
 
         <DemoOverview />
 
-        {activeTab === "config" && <ConfigPanel />}
-        {activeTab === "queue" && <QueuePanel />}
-        {activeTab === "visibility" && (
+        <div className="tab-panel" hidden={activeTab !== "config"}>
+          <ConfigPanel />
+        </div>
+        <div className="tab-panel" hidden={activeTab !== "queue"}>
+          <QueuePanel />
+        </div>
+        <div className="tab-panel" hidden={activeTab !== "visibility"}>
           <VisibilityPanel focusedRawResponseId={focusedRawResponseId} />
-        )}
-        {activeTab === "insights" && <InsightsPanel onOpenRawResponse={openRawResponse} />}
+        </div>
+        <div className="tab-panel" hidden={activeTab !== "insights"}>
+          <InsightsPanel onOpenRawResponse={openRawResponse} />
+        </div>
       </main>
     </div>
   );
